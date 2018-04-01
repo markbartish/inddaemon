@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="100">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <logicalFolder name="HeaderFiles"
+                   displayName="Header Files"
+                   projectFiles="true">
+      <itemPath>config.h</itemPath>
+      <itemPath>debug.h</itemPath>
+      <itemPath>gateway_client_thread.h</itemPath>
+      <itemPath>modbus.h</itemPath>
+      <itemPath>modbus_client.h</itemPath>
+      <itemPath>modbus_slave.h</itemPath>
+      <itemPath>modbus_specific.h</itemPath>
+      <itemPath>tcp_client.h</itemPath>
+      <itemPath>utils.h</itemPath>
+    </logicalFolder>
+    <logicalFolder name="ResourceFiles"
+                   displayName="Resource Files"
+                   projectFiles="true">
+    </logicalFolder>
+    <logicalFolder name="SourceFiles"
+                   displayName="Source Files"
+                   projectFiles="true">
+      <itemPath>client.c</itemPath>
+      <itemPath>config.c</itemPath>
+      <itemPath>gateway_client_thread.c</itemPath>
+      <itemPath>main.c</itemPath>
+      <itemPath>modbus.c</itemPath>
+      <itemPath>modbus_client.c</itemPath>
+      <itemPath>utils.c</itemPath>
+    </logicalFolder>
+    <logicalFolder name="TestFiles"
+                   displayName="Test Files"
+                   projectFiles="false"
+                   kind="TEST_LOGICAL_FOLDER">
+      <logicalFolder name="f1"
+                     displayName="Modbus Module Test"
+                     projectFiles="true"
+                     kind="TEST">
+        <itemPath>tests/modbus_module_test.c</itemPath>
+      </logicalFolder>
+    </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Debug" type="1">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <standard>10</standard>
+        </cTool>
+      </compileType>
+      <item path="client.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="config.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="config.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="debug.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <folder path="TestFiles/f1">
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f1</output>
+          <linkerLibItems>
+            <linkerOptionItem>-lcunit</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <item path="gateway_client_thread.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="gateway_client_thread.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="main.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="modbus.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="modbus.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="modbus_client.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="modbus_client.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="modbus_slave.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="modbus_specific.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="tcp_client.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="tests/modbus_module_test.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="utils.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="utils.h" ex="false" tool="3" flavor2="0">
+      </item>
+    </conf>
+    <conf name="Release" type="1">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <developmentMode>5</developmentMode>
+          <standard>10</standard>
+        </cTool>
+        <ccTool>
+          <developmentMode>5</developmentMode>
+        </ccTool>
+        <fortranCompilerTool>
+          <developmentMode>5</developmentMode>
+        </fortranCompilerTool>
+        <asmTool>
+          <developmentMode>5</developmentMode>
+        </asmTool>
+      </compileType>
+      <item path="client.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="config.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="config.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="debug.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <folder path="TestFiles/f1">
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f1</output>
+          <linkerLibItems>
+            <linkerOptionItem>-lcunit</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <item path="gateway_client_thread.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="gateway_client_thread.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="main.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="modbus.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="modbus.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="modbus_client.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="modbus_client.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="modbus_slave.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="modbus_specific.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="tcp_client.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="tests/modbus_module_test.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="utils.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="utils.h" ex="false" tool="3" flavor2="0">
+      </item>
+    </conf>
+  </confs>
+</configurationDescriptor>

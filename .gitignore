@@ -1,0 +1,8 @@
+*.o
+*~
+config.h
+.dep.inc
+build/*
+data/*
+dist/*
+tests/*
