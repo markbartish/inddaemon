@@ -67,7 +67,7 @@ int main(int argc, char** argv){
     GatewayClientParameters * gwcps[UNITS_IN_USE];
     
     
-    printf("Hello, I am now available at the moment\n");
+    printf("Hello World\n");
     int sockfd = -1;
     char * errmsg = malloc(100 * sizeof(char));
     
