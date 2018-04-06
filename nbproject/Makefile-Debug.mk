@@ -81,37 +81,37 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/inddaemon.exe: ${OBJECTFILES}
 ${OBJECTDIR}/client.o: client.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -g -std=c11 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/client.o client.c
+	$(COMPILE.c) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/client.o client.c
 
 ${OBJECTDIR}/config.o: config.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -g -std=c11 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/config.o config.c
+	$(COMPILE.c) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/config.o config.c
 
 ${OBJECTDIR}/gateway_client_thread.o: gateway_client_thread.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -g -std=c11 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/gateway_client_thread.o gateway_client_thread.c
+	$(COMPILE.c) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/gateway_client_thread.o gateway_client_thread.c
 
 ${OBJECTDIR}/main.o: main.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -g -std=c11 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.c
+	$(COMPILE.c) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.c
 
 ${OBJECTDIR}/modbus.o: modbus.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -g -std=c11 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/modbus.o modbus.c
+	$(COMPILE.c) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/modbus.o modbus.c
 
 ${OBJECTDIR}/modbus_client.o: modbus_client.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -g -std=c11 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/modbus_client.o modbus_client.c
+	$(COMPILE.c) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/modbus_client.o modbus_client.c
 
 ${OBJECTDIR}/utils.o: utils.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -g -std=c11 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/utils.o utils.c
+	$(COMPILE.c) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/utils.o utils.c
 
 # Subprojects
 .build-subprojects:
@@ -128,7 +128,7 @@ ${TESTDIR}/TestFiles/f1: ${TESTDIR}/tests/modbus_module_test.o ${OBJECTFILES:%.o
 ${TESTDIR}/tests/modbus_module_test.o: tests/modbus_module_test.c 
 	${MKDIR} -p ${TESTDIR}/tests
 	${RM} "$@.d"
-	$(COMPILE.c) -g -std=c11 -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/modbus_module_test.o tests/modbus_module_test.c
+	$(COMPILE.c) -g -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/modbus_module_test.o tests/modbus_module_test.c
 
 
 ${OBJECTDIR}/client_nomain.o: ${OBJECTDIR}/client.o client.c 
@@ -139,7 +139,7 @@ ${OBJECTDIR}/client_nomain.o: ${OBJECTDIR}/client.o client.c
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.c) -g -std=c11 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/client_nomain.o client.c;\
+	    $(COMPILE.c) -g -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/client_nomain.o client.c;\
 	else  \
 	    ${CP} ${OBJECTDIR}/client.o ${OBJECTDIR}/client_nomain.o;\
 	fi
@@ -152,7 +152,7 @@ ${OBJECTDIR}/config_nomain.o: ${OBJECTDIR}/config.o config.c
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.c) -g -std=c11 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/config_nomain.o config.c;\
+	    $(COMPILE.c) -g -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/config_nomain.o config.c;\
 	else  \
 	    ${CP} ${OBJECTDIR}/config.o ${OBJECTDIR}/config_nomain.o;\
 	fi
@@ -165,7 +165,7 @@ ${OBJECTDIR}/gateway_client_thread_nomain.o: ${OBJECTDIR}/gateway_client_thread.
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.c) -g -std=c11 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/gateway_client_thread_nomain.o gateway_client_thread.c;\
+	    $(COMPILE.c) -g -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/gateway_client_thread_nomain.o gateway_client_thread.c;\
 	else  \
 	    ${CP} ${OBJECTDIR}/gateway_client_thread.o ${OBJECTDIR}/gateway_client_thread_nomain.o;\
 	fi
@@ -178,7 +178,7 @@ ${OBJECTDIR}/main_nomain.o: ${OBJECTDIR}/main.o main.c
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.c) -g -std=c11 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main_nomain.o main.c;\
+	    $(COMPILE.c) -g -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main_nomain.o main.c;\
 	else  \
 	    ${CP} ${OBJECTDIR}/main.o ${OBJECTDIR}/main_nomain.o;\
 	fi
@@ -191,7 +191,7 @@ ${OBJECTDIR}/modbus_nomain.o: ${OBJECTDIR}/modbus.o modbus.c
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.c) -g -std=c11 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/modbus_nomain.o modbus.c;\
+	    $(COMPILE.c) -g -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/modbus_nomain.o modbus.c;\
 	else  \
 	    ${CP} ${OBJECTDIR}/modbus.o ${OBJECTDIR}/modbus_nomain.o;\
 	fi
@@ -204,7 +204,7 @@ ${OBJECTDIR}/modbus_client_nomain.o: ${OBJECTDIR}/modbus_client.o modbus_client.
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.c) -g -std=c11 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/modbus_client_nomain.o modbus_client.c;\
+	    $(COMPILE.c) -g -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/modbus_client_nomain.o modbus_client.c;\
 	else  \
 	    ${CP} ${OBJECTDIR}/modbus_client.o ${OBJECTDIR}/modbus_client_nomain.o;\
 	fi
@@ -217,7 +217,7 @@ ${OBJECTDIR}/utils_nomain.o: ${OBJECTDIR}/utils.o utils.c
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.c) -g -std=c11 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/utils_nomain.o utils.c;\
+	    $(COMPILE.c) -g -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/utils_nomain.o utils.c;\
 	else  \
 	    ${CP} ${OBJECTDIR}/utils.o ${OBJECTDIR}/utils_nomain.o;\
 	fi
