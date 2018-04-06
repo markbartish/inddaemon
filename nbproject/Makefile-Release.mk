@@ -55,7 +55,7 @@ TESTOBJECTFILES= \
 	${TESTDIR}/tests/modbus_module_test.o
 
 # C Compiler Flags
-CFLAGS=
+CFLAGS=-std=gnu11
 
 # CC Compiler Flags
 CCFLAGS=
