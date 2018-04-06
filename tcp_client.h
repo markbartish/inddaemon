@@ -77,6 +77,7 @@ int tcpcli_connect(const char * ip_addr,
         char * errmsg){
     struct addrinfo hints;
     struct addrinfo *result_ai;
+    struct addrinfo *rp;
     int r;
     int s;
     const size_t NUMSTRBUF_SIZE = 10;
@@ -122,13 +123,25 @@ int tcpcli_connect(const char * ip_addr,
         return INDD_ERROR_COULD_NOT_INIT_SOCKET;
     }
     
-    
-    r = connect(*sockfd, result_ai->ai_addr, result_ai->ai_addrlen);
-    if (r == -1){
+    for (rp = result_ai; rp != NULL; rp = rp->ai_next){
+        *sockfd = socket(rp->ai_family, rp->ai_socktype,
+                     rp->ai_protocol);
+        if (*sockfd == -1){
+            continue;
+        }
+
+        if (connect(*sockfd, rp->ai_addr, rp->ai_addrlen) != -1){
+            break;                 // Success
+        }
+
+        // If we come this far -- failure!
         snprintf(errmsg, 100, "Could not connect to %s:%u\n", ip_addr, port);
         printf(errmsg);
+        close(*sockfd);
         return INDD_ERROR_COULD_NOT_CONNECT;
-    }
+    }    
+    
+
     
     return 0;
 }
