@@ -27,6 +27,7 @@
 #include "utils.h"
 #include "config.h"
 #include "tcp_client.h"
+#include "modbus_client.h"
 
 void print_bytes_msg(void *arr, char *msg, uint32_t size){
     for (int i=0; i < size; i++){
@@ -45,11 +46,7 @@ void print_bytes(void *arr, uint32_t size){
 
 
 
-void error(char *msg)
-{
-    perror(msg);
-    exit(1);
-}
+
 
 
 int check_stop(pthread_t tid){
@@ -105,15 +102,6 @@ int main(int argc, char** argv){
     init_gateways();
     printf("Done!\n");
     
-    //printf("Preparing gateway poll: ");
-    for (int i = 0; i < UNITS_IN_USE; i++){
-        //printf("Preparing gateway %d ", i);
-        prepare_gateway_poll(slaves[i], serv_addrs[i], &sock_fds[i]);
-        init_gwcp(POLL_INTERVAL_USEC, slaves[i], check_stop);
-    }
-    for (int i= 0; i < UNITS_IN_USE; i++){
-        r = connect_to_gateway(*serv_addrs[i], sock_fds[i]);
-    }
     
     //Construct request for each unit
     for (int i = 0; i < UNITS_IN_USE; i++){
@@ -122,41 +110,10 @@ int main(int argc, char** argv){
         printf("Constructed request for gw %s:\n", slaves[i].ip);
         print_bytes(reqs[i], REQUEST_SIZE);
     }
-
-    for (int iter = 0; iter < 10; iter++){
-        for (int i = 0; i < UNITS_IN_USE; i++){
-            break;
-            uint8_t *req = reqs[i];
-            uint64_t send_time;
-            uint64_t recv_time;
-
-            set_transaction_id(req, iter);
-            send_time = getTimeMillis();
-            printf("%s#%d:\n", slaves[i].ip, slaves[i].id);
-            printf("OUT [%llu]: ", send_time);
-            print_bytes(req, REQUEST_SIZE);
-
-            // printf("Polling gateway %d: \n", i);
-            uint8_t resp[UINT16_MAX];
-            int resp_size = 0;
-            resp_size = poll_gateway(sock_fds[i], slaves[i], req, 
-                    REQUEST_SIZE, (uint8_t *) &resp, sizeof(resp));
-            recv_time = getTimeMillis();    
-            printf("IN: [%llu]: ", recv_time);
-            if (slaves[i].inverted){
-                print_bytes_msg(resp, "(inv)", resp_size);
-            }
-            else{
-                print_bytes(resp, resp_size);
-            }
-            printf("Time diff %lld ms\n", recv_time - send_time);
-        }
-    }
     
     for (int i= 0; i < UNITS_IN_USE; i++){
         int r = close(sock_fds[i]);
     }
-
     
     printf("MAIN - before threads\n");
     

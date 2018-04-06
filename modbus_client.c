@@ -12,6 +12,7 @@
 #include "modbus.h"
 #include "modbus_client.h"
 #include "modbus_slave.h"
+#include "utils.h"
 
 /**
  * Do one gateway polling

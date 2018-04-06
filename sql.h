@@ -5,29 +5,25 @@
  */
 
 /* 
- * File:   utils.h
+ * File:   sql.h
  * Author: Mark
  *
- * Created on den 9 mars 2018, 22:09
+ * Created on April 6, 2018, 8:56 PM
  */
 
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef SQL_H
+#define SQL_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stdint.h>
 
-void error(char *msg);  
-    
-uint64_t getTimeMillis();
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* UTILS_H */
+#endif /* SQL_H */
 

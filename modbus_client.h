@@ -19,7 +19,11 @@ extern "C" {
 #endif
 
 
-
+int poll_gateway(int sockfd,
+                 uint8_t *req, 
+                 size_t req_size, 
+                 uint8_t *resp_buf, 
+                 size_t resp_buf_size);
 
 #ifdef __cplusplus
 }

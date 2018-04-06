@@ -5,6 +5,10 @@
  */
 
 #include <sys/time.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "utils.h"
 
 #if 0
 struct timeval {
@@ -12,6 +16,12 @@ struct timeval {
     suseconds_t tv_usec;    /* microseconds */
 };
 #endif
+
+
+void error(char *msg){
+    perror(msg);
+    exit(1);
+}
 
 uint64_t getTimeMillis(){
     struct timeval tv;
