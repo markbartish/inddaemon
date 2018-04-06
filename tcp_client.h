@@ -106,23 +106,6 @@ int tcpcli_connect(const char * ip_addr,
         return INDD_ERROR_BAD_ADDRINFO_RETURNED;
     }
     
-    // In our case getaddrinfo should only return one struct addrinfo
-    if (result_ai->ai_next != NULL){
-        snprintf(errmsg, 100, "getaddrinfo() returned more than one struct addrinfo\n");
-        printf(errmsg);
-        return INDD_ERROR_BAD_ADDRINFO_RETURNED;
-    }
-    
-    *sockfd = socket(result_ai->ai_family, 
-            result_ai->ai_socktype, 
-            result_ai->ai_protocol);
-    
-    if (*sockfd < 0){
-        snprintf(errmsg, 100, "Could not get any socket file descriptor\n");
-        printf(errmsg);
-        return INDD_ERROR_COULD_NOT_INIT_SOCKET;
-    }
-    
     for (rp = result_ai; rp != NULL; rp = rp->ai_next){
         *sockfd = socket(rp->ai_family, rp->ai_socktype,
                      rp->ai_protocol);
@@ -140,8 +123,6 @@ int tcpcli_connect(const char * ip_addr,
         close(*sockfd);
         return INDD_ERROR_COULD_NOT_CONNECT;
     }    
-    
-
     
     return 0;
 }
