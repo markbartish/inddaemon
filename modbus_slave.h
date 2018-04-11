@@ -26,8 +26,14 @@ typedef struct modbus_slave_t{
     uint8_t               id;
     uint8_t               n_of_dis;
     bool                  inverted;
+    //struct modbus_slave_t *next;
 } ModbusSlave;
 
+
+typedef struct modbus_slave_list{
+    ModbusSlave *slave;
+    ModbusSlave *next;
+} ModbusSlaveLinkedList;
 
 
 #ifdef __cplusplus

@@ -7,6 +7,6 @@ CREATE TABLE polls (
     state_data INTEGER,
     mb_excp_data INTEGER,
     socket_error_data INTEGER,
-    socker_error_info TEXT,
+    socket_error_info TEXT,
     FOREIGN KEY(unit_id) REFERENCES units(id)
 );

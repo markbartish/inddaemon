@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="100">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <logicalFolder name="f1" displayName="Data Files" projectFiles="true">
+      <itemPath>data/unit_di_portmap_data.sql</itemPath>
+      <itemPath>data/units_data.sql</itemPath>
+    </logicalFolder>
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
@@ -11,12 +15,17 @@
       <itemPath>modbus_client.h</itemPath>
       <itemPath>modbus_slave.h</itemPath>
       <itemPath>modbus_specific.h</itemPath>
+      <itemPath>sql.h</itemPath>
+      <itemPath>sqlite_adapter.h</itemPath>
       <itemPath>tcp_client.h</itemPath>
       <itemPath>utils.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
                    projectFiles="true">
+      <itemPath>sql/polls_schema.sql</itemPath>
+      <itemPath>sql/unit_di_portmap_schema.sql</itemPath>
+      <itemPath>sql/units_schema.sql</itemPath>
     </logicalFolder>
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
@@ -57,14 +66,24 @@
       </toolsSet>
       <compileType>
         <cTool>
-          <standard>10</standard>
+          <commandLine>-std=gnu11</commandLine>
         </cTool>
+        <linkerTool>
+          <linkerAddLib>
+            <pElem>/usr/local/lib</pElem>
+          </linkerAddLib>
+          <commandLine>-lsqlite3</commandLine>
+        </linkerTool>
       </compileType>
       <item path="client.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="config.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="config.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="data/unit_di_portmap_data.sql" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="data/units_data.sql" ex="false" tool="3" flavor2="0">
       </item>
       <item path="debug.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -93,6 +112,16 @@
       <item path="modbus_slave.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="modbus_specific.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="sql.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="sql/polls_schema.sql" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="sql/unit_di_portmap_schema.sql" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="sql/units_schema.sql" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="sqlite_adapter.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="tcp_client.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -112,7 +141,7 @@
       <compileType>
         <cTool>
           <developmentMode>5</developmentMode>
-          <standard>10</standard>
+          <commandLine>-std=gnu11</commandLine>
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
@@ -123,12 +152,22 @@
         <asmTool>
           <developmentMode>5</developmentMode>
         </asmTool>
+        <linkerTool>
+          <linkerAddLib>
+            <pElem>/usr/local/lib</pElem>
+          </linkerAddLib>
+          <commandLine>-lsqlite3</commandLine>
+        </linkerTool>
       </compileType>
       <item path="client.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="config.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="config.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="data/unit_di_portmap_data.sql" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="data/units_data.sql" ex="false" tool="3" flavor2="0">
       </item>
       <item path="debug.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -157,6 +196,16 @@
       <item path="modbus_slave.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="modbus_specific.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="sql.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="sql/polls_schema.sql" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="sql/unit_di_portmap_schema.sql" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="sql/units_schema.sql" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="sqlite_adapter.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="tcp_client.h" ex="false" tool="3" flavor2="0">
       </item>

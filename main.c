@@ -28,6 +28,7 @@
 #include "config.h"
 #include "tcp_client.h"
 #include "modbus_client.h"
+#include "sqlite_adapter.h"
 
 void print_bytes_msg(void *arr, char *msg, uint32_t size){
     for (int i=0; i < size; i++){
@@ -60,8 +61,31 @@ int main(int argc, char** argv){
     int                     * sock_fds = malloc(UNITS_IN_USE * sizeof(int));
     struct sockaddr_in     ** serv_addrs = malloc(UNITS_IN_USE * sizeof(serv_addrs));
     uint8_t                ** reqs = malloc(UNITS_IN_USE * sizeof(reqs));
-    int                       ret;
+    int                       rc, ret;
     GatewayClientParameters * gwcps[UNITS_IN_USE];
+    sqlite3                 * db;
+    ModbusSlaveLinkedList   unit_list;
+    
+    rc = sa_open_conn(&db);
+    printf("sa_open_conn called, rc=%d\n", rc);
+    //sa_get_unit_list(db, &unit_list);
+    int c = sa_count_stmt(db, "units", NULL);
+    printf("cnt = %d\n", c);
+    //printf("id: %d, ip: %s\n", unit_list.slave->id, unit_list.slave->ip);
+    
+    
+    /*
+    while (el != NULL){
+        printf("%d: %s\n", el->slave->id, el->slave->ip);
+        el = el->next;
+    }
+    */
+    
+    rc = sqlite3_close(db);
+    
+    printf("sqlite3_close called, rc=%d\n", rc);
+    
+    return 0;
     
     
     printf("Hello World\n");
