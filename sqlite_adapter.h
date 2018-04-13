@@ -51,35 +51,35 @@ size_t sa_get_units_count(){
     
 }
 
-int sa_get_unit_list(sqlite3 *pDb, ModbusSlaveLinkedList *unit_list){
+int sa_get_unit_list(sqlite3 *pDb, ModbusSlave **unit_list, size_t units_count){
     int rc;
     char sql_statement[] = "SELECT * FROM units;";
     sqlite3_stmt *pStmt;
 
     rc = sqlite3_prepare_v2(pDb, sql_statement, sizeof(sql_statement), &pStmt, NULL);
     
-    ModbusSlaveLinkedList *prev = NULL;
-    while ((rc = sqlite3_step(pStmt)) == SQLITE_ROW){
-        //printf("executed sqlite3_step, rc = %d\n", rc);
-        int id = sqlite3_column_int(pStmt, 0);
+    int c = 0;
+    while ((rc = sqlite3_step(pStmt)) == SQLITE_ROW && c < units_count){
+        printf("iteration, c = %d\n", c);
+        //int id = sqlite3_column_int(pStmt, 0);
         unsigned char *ip = sqlite3_column_text(pStmt, 1);
-        //printf("id: %d\n", id);
-        //printf("ip: %s\n", ip);
+        printf("sa_get_unit_list, ip = %s\n", ip);
+        int port = sqlite3_column_int(pStmt, 2);
+        int slave_id = sqlite3_column_int(pStmt, 3);
+        int di_count = sqlite3_column_int(pStmt, 4);
+        unit_list[c]->id = slave_id;
+        unit_list[c]->ip = malloc(BUF_SIZE);
+        strncpy(unit_list[c]->ip, ip, BUF_SIZE);
+        unit_list[c]->n_of_dis = di_count;
         
-        unit_list->slave = malloc(sizeof(ModbusSlave));
-        unit_list->slave->id = id;
-        size_t ip_size = strlen(ip);
-        unit_list->slave->ip = malloc(ip_size);
-        strncpy(unit_list->slave->ip, ip, ip_size);
+        printf("sa_get_unit_list, unit_list[c]->ip = %s\n", unit_list[c]->ip);
         
-        if (prev != NULL){ prev->next = unit_list->slave; }
-        unit_list->next = NULL;
-        prev = unit_list->slave;
+        unit_list[c]->port = (uint16_t) port;
+        
+        c++;
     }
     
     rc = sqlite3_finalize(pStmt);
-    
-    printf("inside get_unit_list\n");
 }
 
     

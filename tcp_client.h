@@ -74,13 +74,14 @@ int prepare_gateway_poll(ModbusSlave slave,
 int tcpcli_connect(const char * ip_addr, 
         uint16_t port, 
         int * sockfd, 
-        char * errmsg){
+        char ** errmsg){
     struct addrinfo hints;
     struct addrinfo *result_ai;
     struct addrinfo *rp;
     int r;
     int s;
     const size_t NUMSTRBUF_SIZE = 10;
+    char err[1024];
     
     printf("tcpcli_connect: addr: %s, port: %u\n", ip_addr, port);
     
@@ -100,11 +101,13 @@ int tcpcli_connect(const char * ip_addr,
     snprintf(port_str, NUMSTRBUF_SIZE, "%u", port);
     
     s = getaddrinfo(ip_addr, port_str, &hints, &result_ai);
+    
     if (s != 0) {
-        snprintf(errmsg, 100, "getaddrinfo: %s\n", gai_strerror(s));
-        printf(errmsg);
+        snprintf(err, 1024, "getaddrinfo: %s\n", gai_strerror(s));
+        printf(err);
         return INDD_ERROR_BAD_ADDRINFO_RETURNED;
     }
+    printf("tcpcli_connect: past getaddrinfo\n");
     
     for (rp = result_ai; rp != NULL; rp = rp->ai_next){
         *sockfd = socket(rp->ai_family, rp->ai_socktype,
@@ -114,12 +117,14 @@ int tcpcli_connect(const char * ip_addr,
         }
 
         if (connect(*sockfd, rp->ai_addr, rp->ai_addrlen) != -1){
+            printf("tcpcli_connect: past socket and connect\n");
             break;                 // Success
         }
 
         // If we come this far -- failure!
-        snprintf(errmsg, 100, "Could not connect to %s:%u\n", ip_addr, port);
-        printf(errmsg);
+        snprintf(err, 1024, "Could not connect to %s:%u\n", ip_addr, port);
+        printf("rp = 0x%08x\n", rp);
+        fprintf(stderr, err);
         close(*sockfd);
         return INDD_ERROR_COULD_NOT_CONNECT;
     }    

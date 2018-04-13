@@ -45,18 +45,12 @@ void print_bytes(void *arr, uint32_t size){
     printf("\n");
 }
 
-
-
-
-
-
 int check_stop(pthread_t tid){
     return 1;
 }
 
 int main(int argc, char** argv){
     const size_t              REQUEST_SIZE = MBAP_HEADER_SIZE + REQUEST_PDU_SIZE;
-    const size_t              THREADS_NUM = 5; 
     pthread_t                 tids[UNITS_IN_USE];
     int                     * sock_fds = malloc(UNITS_IN_USE * sizeof(int));
     struct sockaddr_in     ** serv_addrs = malloc(UNITS_IN_USE * sizeof(serv_addrs));
@@ -64,51 +58,64 @@ int main(int argc, char** argv){
     int                       rc, ret;
     GatewayClientParameters * gwcps[UNITS_IN_USE];
     sqlite3                 * db;
-    ModbusSlaveLinkedList   unit_list;
+    ModbusSlave            ** mbslaves;
+    int                       slaves_count;
+    char                    * errmsg = malloc(100);
     
     rc = sa_open_conn(&db);
     printf("sa_open_conn called, rc=%d\n", rc);
-    //sa_get_unit_list(db, &unit_list);
-    int c = sa_count_stmt(db, "units", NULL);
-    printf("cnt = %d\n", c);
+    slaves_count = sa_count_stmt(db, "units", NULL);
+    printf("slaves_count = %d\n", slaves_count);
     //printf("id: %d, ip: %s\n", unit_list.slave->id, unit_list.slave->ip);
     
-    
-    /*
-    while (el != NULL){
-        printf("%d: %s\n", el->slave->id, el->slave->ip);
-        el = el->next;
+    if (slaves_count == -1){
+        fprintf(stderr, "Something went wrong counting slaves, quitting.\n");
+        exit(1);
     }
-    */
     
-    rc = sqlite3_close(db);
+    mbslaves = malloc(slaves_count * sizeof(ModbusSlave));
     
-    printf("sqlite3_close called, rc=%d\n", rc);
-    
-    return 0;
-    
-    
-    printf("Hello World\n");
     int sockfd = -1;
-    char * errmsg = malloc(100 * sizeof(char));
     
+    mbslaves = malloc(slaves_count);
+    for (int i = 0; i < slaves_count; i++){
+        mbslaves[i] = malloc(sizeof(ModbusSlave));
+    }
     
-    init_gateways();
+    sa_get_unit_list(db, mbslaves, slaves_count);
+    
+    printf("After sa_get_unit_list\n");
+    
+    for (int i = 0; i < slaves_count; i++){
+        printf("mbslaves[i]->id = %d\n", mbslaves[i]->id);
+        printf("mbslaves[i]->port = %d\n", mbslaves[i]->port);
+        printf("mbslaves[i]->ip = %s\n", mbslaves[i]->ip);
+        printf("mbslaves[i]->ip = %s\n", mbslaves[i]->id);
+        printf("mbslaves[i]->ip = %s\n", mbslaves[i]->ip);
+    }
+
     
     printf("sockfd before: %d\n", sockfd);
-    int r = tcpcli_connect(slaves[0].ip, slaves[0].port, &sockfd, errmsg);
+    int r = tcpcli_connect(mbslaves[0]->ip, mbslaves[0]->port, &sockfd, &errmsg);
     
     printf("sockfd after: %d\n", sockfd);
+    
+    return 0;
     
     printf("got past tcpcli_connect\n");
     if (r != 0){
         printf("Something was unsuccessfull during connect attempt\n");
+        printf("r = %d", r);
         printf(errmsg);
         printf("\n");
     }
 
-    
     close(sockfd);
+    
+    for (int i = 0; i < slaves_count; i++){
+        free(mbslaves[i]);
+    }
+    free(mbslaves);
     
     free(errmsg);
     return 0;
@@ -117,15 +124,9 @@ int main(int argc, char** argv){
         reqs[i] = malloc(REQUEST_SIZE * sizeof(uint8_t));
         serv_addrs[i] = malloc(sizeof(struct sockaddr_in));
     }
-    
 
     //GatewayClientParameters ** gwcp = malloc(sizeof(GatewayClientParameters) * UNITS_IN_USE);
     //memset(gwcp, 0, sizeof(GatewayClientParameters) * UNITS_IN_USE);
-    
-    printf("Initializing units data: ");
-    init_gateways();
-    printf("Done!\n");
-    
     
     //Construct request for each unit
     for (int i = 0; i < UNITS_IN_USE; i++){
@@ -139,16 +140,13 @@ int main(int argc, char** argv){
         int r = close(sock_fds[i]);
     }
     
-    printf("MAIN - before threads\n");
-    
-    for (int i = 0; i < THREADS_NUM; i++){
-
+    for (int i = 0; i < slaves_count; i++){
         printf("Starting thread %d  ", i);
         ret = pthread_create(&tids[i], NULL, gateway_client_transmit, gwcps[i]);
         printf("Done, ret code = %d\n", ret);
     }
     
-    for (int i = 0; i < THREADS_NUM; i++){
+    for (int i = 0; i < slaves_count; i++){
         printf("Waiting for thread %d to end ", i);
         pthread_join(tids[i], NULL);
         printf("Done\n");
@@ -161,6 +159,11 @@ int main(int argc, char** argv){
         free(reqs[i]);
     }
     printf("done \n");
+    
+    
+    rc = sqlite3_close(db);
+    
+    printf("sqlite3_close called, rc=%d\n", rc);
     
     printf("freeing reqs \n");
     free(reqs);
