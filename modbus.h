@@ -40,9 +40,6 @@ typedef struct request_pdu_t{
 } RequestPDU;
 
 
-
-
-
 int  construct_mbap_header(struct mbap_t mbap_buf, uint8_t *result_buf);
 int  construct_request_pdu(struct request_pdu_t req_pdu_buf, uint8_t *result_buf);
 int  decode_mbap_header(const uint8_t *arr, struct mbap_t *header);

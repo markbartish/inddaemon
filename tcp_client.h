@@ -27,6 +27,7 @@ extern "C" {
 #include <netdb.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <errno.h>
     
 
 //extern int errno;
@@ -72,13 +73,12 @@ int prepare_gateway_poll(ModbusSlave slave,
  * @return 0 on success, error code on failure
  */
 int tcpcli_connect(const char * ip_addr, 
-        uint16_t port, 
-        int * sockfd, 
-        char ** errmsg){
+                   uint16_t port, 
+                   int * sockfd, 
+                   char * errmsg){
     struct addrinfo hints;
     struct addrinfo *result_ai;
     struct addrinfo *rp;
-    int r;
     int s;
     const size_t NUMSTRBUF_SIZE = 10;
     char err[1024];
@@ -107,28 +107,24 @@ int tcpcli_connect(const char * ip_addr,
         printf(err);
         return INDD_ERROR_BAD_ADDRINFO_RETURNED;
     }
-    printf("tcpcli_connect: past getaddrinfo\n");
     
     for (rp = result_ai; rp != NULL; rp = rp->ai_next){
-        *sockfd = socket(rp->ai_family, rp->ai_socktype,
-                     rp->ai_protocol);
+        *sockfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
         if (*sockfd == -1){
             continue;
         }
 
         if (connect(*sockfd, rp->ai_addr, rp->ai_addrlen) != -1){
-            printf("tcpcli_connect: past socket and connect\n");
             break;                 // Success
         }
 
         // If we come this far -- failure!
         snprintf(err, 1024, "Could not connect to %s:%u\n", ip_addr, port);
-        printf("rp = 0x%08x\n", rp);
-        fprintf(stderr, err);
+        strerror_r(errno, err, 1024);
+        strncpy(errmsg, err, 1024);
         close(*sockfd);
         return INDD_ERROR_COULD_NOT_CONNECT;
     }    
-    
     return 0;
 }
 

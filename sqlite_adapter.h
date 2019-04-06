@@ -23,12 +23,12 @@ int sa_count_stmt(sqlite3 *pDb, const char *table, const char *where_cond){
     sqlite3_stmt *pStmt;
     
     snprintf(buf, BUF_SIZE, sql_statement, table);
-    /*
+
     if (where_cond != NULL){
         printf("There is a where condition\n");
-        snprintf(buf, BUF_SIZE, " WHERE %s", where_cond);
+        snprintf(buf, BUF_SIZE, "%s WHERE %s", buf, where_cond);
     }
-    */
+
     snprintf(buf, BUF_SIZE, "%s;", buf);
     printf("%s\n", buf);
     
@@ -53,99 +53,44 @@ size_t sa_get_units_count(){
 
 int sa_get_unit_list(sqlite3 *pDb, ModbusSlave **unit_list, size_t units_count){
     int rc;
-    char sql_statement[] = "SELECT * FROM units;";
+    char sql_statement[] = "SELECT ip, port, slave_id, di_count, inverted FROM units;";
     sqlite3_stmt *pStmt;
 
     rc = sqlite3_prepare_v2(pDb, sql_statement, sizeof(sql_statement), &pStmt, NULL);
     
+    if (rc != SQLITE_OK){
+        printf("Error: %s\n", sqlite3_errmsg(pDb));
+        return rc;
+    }
+    
     int c = 0;
     while ((rc = sqlite3_step(pStmt)) == SQLITE_ROW && c < units_count){
-        printf("iteration, c = %d\n", c);
-        //int id = sqlite3_column_int(pStmt, 0);
-        unsigned char *ip = sqlite3_column_text(pStmt, 1);
-        printf("sa_get_unit_list, ip = %s\n", ip);
-        int port = sqlite3_column_int(pStmt, 2);
-        int slave_id = sqlite3_column_int(pStmt, 3);
-        int di_count = sqlite3_column_int(pStmt, 4);
-        unit_list[c]->id = slave_id;
-        unit_list[c]->ip = malloc(BUF_SIZE);
-        strncpy(unit_list[c]->ip, ip, BUF_SIZE);
-        unit_list[c]->n_of_dis = di_count;
+        const unsigned char *ip = sqlite3_column_text(pStmt, 0);      
+        int port                = sqlite3_column_int(pStmt, 1);
+        int slave_id            = sqlite3_column_int(pStmt, 2);
+        int di_count            = sqlite3_column_int(pStmt, 3);
+        bool inverted           = sqlite3_column_int(pStmt, 4);
         
-        printf("sa_get_unit_list, unit_list[c]->ip = %s\n", unit_list[c]->ip);
-        
-        unit_list[c]->port = (uint16_t) port;
-        
+        strncpy(unit_list[c]->ip, ip, MBSLAVE_IP_SIZE);
+        unit_list[c]->id        = (uint8_t)  slave_id;
+        unit_list[c]->port      = (uint16_t) port;
+        unit_list[c]->n_of_dis  = (uint8_t) di_count;
+        unit_list[c]->inverted  = (bool) inverted;
+
         c++;
     }
     
     rc = sqlite3_finalize(pStmt);
 }
 
-    
 int sa_open_conn(sqlite3 **ppDb){
     int rc = sqlite3_open_v2(DB_NAME, ppDb, DB_OPEN_MODE, NULL);
-    if(rc != SQLITE_OK){
-        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(*ppDb));
+    if (rc != SQLITE_OK){
+        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(*ppDb));
         sqlite3_close(*ppDb);
     }
     return(rc);
 }
-
-
-int callback(void *argp, int argc, char **argv, char **azColName){
-    printf("Callback speaking\n");
-    printf("argc = %d\n", argc);
-    for (int i = 0; i < argc; i++){
-        printf("argv[%d] = %s\n", i, argv[i]);
-        printf("azColName[%d] = %s\n", i, azColName[i]); 
-        printf("\n");
-    }
-    return 0;
-}
-
-int opendb(){
-    sqlite3 *db;
-    char *zErrMsg = NULL;
-    int rc;
-    sqlite3_stmt *ppStmt;
-    const char *pzTail;
-    rc = sqlite3_open(DB_NAME, &db);
-    
-    printf("opendb speaking\n");
-    
-    if( rc ){
-      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-      sqlite3_close(db);
-      return(1);
-    }    
-    
-    const char sql_statement[] = "SELECT * FROM units;";
-    
-    //rc = sqlite3_exec(db, sql_statement, callback, NULL, &zErrMsg);
-    
-    rc = sqlite3_prepare_v2(db, sql_statement, sizeof(sql_statement), &ppStmt, &pzTail);
-    printf("executed sqlite3_prepare_v2, rc = %d\n", rc);
-    printf("pzTail = %s\n", pzTail);
-    
-    while ( (rc = sqlite3_step(ppStmt)) == SQLITE_ROW){
-        printf("executed sqlite3_step, rc = %d\n", rc);
-        printf("Past sqlite3_exec\n");
-        int v = sqlite3_column_int(ppStmt, 0);
-        printf("column 0 value = %d\n", v);
-    }
-    
-    rc = sqlite3_finalize(ppStmt);
-    
-    if( rc != SQLITE_OK ){
-        fprintf(stderr, "SQL error: %s\n", zErrMsg);
-        sqlite3_free(zErrMsg);
-    }
-    sqlite3_close(db);
-    
-    return 0;
-} 
- 
  
 /**
  * 
@@ -165,20 +110,9 @@ int write_poll_result(int unit_id,
                       uint32_t socket_error_data,
                       const char *socket_error_info){
     const char column_list[] = "unit_id, trans_id, trans_init_time, trans_end_time, state_data, mb_excp_data, socket_error_data, socket_error_info";
-    //const char values[] = concat_poll_values();
     const char sql_statement_templ[] = "INSERT INTO %s (%s) VALUES()";
     
 }
-
-
-// Private helpers
-
-static char *concat_poll_values(int unit_id, 
-                                const char *trans_id,
-                                const char *something_else){
-    
-}
-
 #ifdef __cplusplus
 }
 #endif

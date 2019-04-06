@@ -20,20 +20,15 @@ extern "C" {
     
 #include <stdbool.h>
 
+#define MBSLAVE_IP_SIZE 64
+    
 typedef struct modbus_slave_t{
-    char                  *ip;
+    char                  ip[MBSLAVE_IP_SIZE];
     uint16_t              port;
     uint8_t               id;
     uint8_t               n_of_dis;
     bool                  inverted;
-    //struct modbus_slave_t *next;
 } ModbusSlave;
-
-
-typedef struct modbus_slave_list{
-    ModbusSlave *slave;
-    ModbusSlave *next;
-} ModbusSlaveLinkedList;
 
 
 #ifdef __cplusplus
