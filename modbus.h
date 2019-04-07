@@ -25,6 +25,9 @@ extern "C" {
 
 #define MB_FUNC_READ_DI  0x02
 #define MB_PROTO_ID      0x00
+    
+#define MB_DATA_OFFSET   0x08
+#define MB_FCODE_OFFSET  0x07
 
 typedef struct mbap_t{
     uint16_t trans_id;
@@ -40,12 +43,12 @@ typedef struct request_pdu_t{
 } RequestPDU;
 
 
-int  construct_mbap_header(struct mbap_t mbap_buf, uint8_t *result_buf);
-int  construct_request_pdu(struct request_pdu_t req_pdu_buf, uint8_t *result_buf);
-int  decode_mbap_header(const uint8_t *arr, struct mbap_t *header);
-void set_transaction_id(uint8_t *req, uint16_t trans_id);
-int  construct_request(uint16_t trans_id, uint8_t unit_id,
+static int  modbus_construct_mbap_header(struct mbap_t mbap_buf, uint8_t *result_buf);
+static int  modbus_construct_request_pdu(struct request_pdu_t req_pdu_buf, uint8_t *result_buf);
+static void modbus_set_transaction_id(uint8_t *req, uint16_t trans_id);
+int  modbus_construct_request(uint16_t trans_id, uint8_t unit_id,
                       uint16_t n_of_dis, uint8_t *out_buf, size_t out_buf_size);
+int  modbus_decode_mbap_header(const uint8_t *arr, struct mbap_t *header);
 
 #ifdef __cplusplus
 }

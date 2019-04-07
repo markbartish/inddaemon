@@ -28,37 +28,6 @@ extern "C" {
 #include <pthread.h>
 #include <unistd.h>
 #include <errno.h>
-    
-
-//extern int errno;
-    
-#if 0
-int prepare_gateway_poll(ModbusSlave slave, 
-        struct sockaddr_in *serv_addr, int *sockfd){
-    struct hostent *server;
-    
-    *sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    
-    if (*sockfd < 0){
-        error("ERROR opening socket");
-    }
-    
-    // TODO: gethostbyname is obsolete, find alternative!
-    server = gethostbyname(slave.ip);
-    if (server == NULL) {
-        fprintf(stderr, "ERROR, no such host\n");
-        exit(0);
-    }
-    memset((char *) serv_addr, 0, sizeof(struct sockaddr_in));
-    serv_addr->sin_family = AF_INET;
-    memcpy((char *) &serv_addr->sin_addr.s_addr,
-           (char *) server->h_addr,
-           server->h_length);
-    serv_addr->sin_port = htons(slave.port);
-    
-    return 0;
-}
-#endif    
 
 #define INDD_ERROR_COULD_NOT_INIT_SOCKET 1
 #define INDD_ERROR_BAD_ADDRINFO_RETURNED 2

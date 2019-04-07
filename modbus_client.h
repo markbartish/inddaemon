@@ -17,9 +17,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+    
+#define MODBUS_REQUEST_BUF_SIZE  256
+#define MODBUS_RESPONSE_BUF_SIZE 256
 
 
-int poll_gateway(int sockfd,
+static int mbcli_poll_gateway(int sockfd,
                  uint8_t *req, 
                  size_t req_size, 
                  uint8_t *resp_buf, 

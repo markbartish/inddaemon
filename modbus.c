@@ -7,7 +7,7 @@
 
 #include "modbus.h"
 
-int construct_mbap_header(struct mbap_t mbap, uint8_t *result_buf){
+static int modbus_construct_mbap_header(struct mbap_t mbap, uint8_t *result_buf){
     result_buf = memset(result_buf, 0x00, MBAP_HEADER_SIZE);
     result_buf[0] = (uint8_t) (mbap.trans_id >> 8);
     result_buf[1] = (uint8_t) (mbap.trans_id & 0xff);
@@ -19,7 +19,7 @@ int construct_mbap_header(struct mbap_t mbap, uint8_t *result_buf){
     return MBAP_HEADER_SIZE;
 }
 
-int construct_request_pdu(struct request_pdu_t req_pdu, uint8_t *result_buf){
+static int modbus_construct_request_pdu(struct request_pdu_t req_pdu, uint8_t *result_buf){
     result_buf = memset(result_buf, 0x00, REQUEST_PDU_SIZE);
     result_buf[0] = req_pdu.func_code;
     result_buf[1] = (uint8_t) (req_pdu.start_addr >> 8);
@@ -29,25 +29,17 @@ int construct_request_pdu(struct request_pdu_t req_pdu, uint8_t *result_buf){
     return REQUEST_PDU_SIZE;
 }
 
-int decode_mbap_header(const uint8_t *arr, struct mbap_t *header){
-    header->trans_id = (arr[0] << 8) | arr[1];
-    header->proto_id = (arr[2] << 8) | arr[3];
-    header->msg_len  = (arr[4] << 8) | arr[5];
-    header->unit_id  = arr[6];
-    return 0;
-}
-
 /**
  * 
  * @param req the request array that will be modified in place
  * @return 
  */
-void set_transaction_id(uint8_t *req, uint16_t trans_id){
+static void modbus_set_transaction_id(uint8_t *req, uint16_t trans_id){
     req[0] = (uint8_t) (trans_id >> 8);
     req[1] = (uint8_t) (trans_id & 0xff);
 }
 
-int construct_request(uint16_t trans_id, uint8_t unit_id,
+int modbus_construct_request(uint16_t trans_id, uint8_t unit_id,
                       uint16_t n_of_dis, uint8_t *out_buf, size_t out_buf_size){
     struct mbap_t mbap;
     struct request_pdu_t reqpdu;
@@ -63,8 +55,8 @@ int construct_request(uint16_t trans_id, uint8_t unit_id,
     reqpdu.start_addr = 0;
     reqpdu.num_of_dis = n_of_dis; // unit specific parameter
     
-    construct_mbap_header(mbap, (uint8_t*) &mbap_buf);
-    construct_request_pdu(reqpdu, (uint8_t*) &request_pdu_buf);
+    modbus_construct_mbap_header(mbap, (uint8_t*) &mbap_buf);
+    modbus_construct_request_pdu(reqpdu, (uint8_t*) &request_pdu_buf);
     
     memcpy(out_buf, mbap_buf, sizeof(mbap_buf));
     memcpy(&out_buf[sizeof(mbap_buf)], request_pdu_buf, sizeof(request_pdu_buf));
@@ -79,3 +71,10 @@ int construct_request(uint16_t trans_id, uint8_t unit_id,
     return 0;
 }
 
+int modbus_decode_mbap_header(const uint8_t *arr, struct mbap_t *header){
+    header->trans_id = (arr[0] << 8) | arr[1];
+    header->proto_id = (arr[2] << 8) | arr[3];
+    header->msg_len  = (arr[4] << 8) | arr[5];
+    header->unit_id  = arr[6];
+    return 0;
+}

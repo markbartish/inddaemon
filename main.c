@@ -50,91 +50,60 @@ int check_stop(pthread_t tid){
 }
 
 int main(int argc, char** argv){
-    const size_t              REQUEST_SIZE = MBAP_HEADER_SIZE + REQUEST_PDU_SIZE;
-    pthread_t                 tids[UNITS_IN_USE];
-    int                     * sock_fds;
-    struct sockaddr_in     ** serv_addrs = malloc(UNITS_IN_USE * sizeof(serv_addrs));
-    uint8_t                ** reqs = malloc(UNITS_IN_USE * sizeof(reqs));
-    int                       rc, ret;
-    GatewayClientParameters * gwcps[UNITS_IN_USE];
-    sqlite3                 * db;
-    sqlite3                ** dbconns_for_slaves;
-    ModbusSlave            ** mbslaves;
-    int                       slaves_count;
-    char                    * errmsg = malloc(1024);
+    //const size_t              REQUEST_SIZE = MBAP_HEADER_SIZE + REQUEST_PDU_SIZE;
+    int              rc;
+    int            * sock_fds;
+    size_t           units_count;
+    ModbusSlave    * mbslaves;
+    sqlite3       ** dbconns_for_units;
+    char             errmsg[BUF_SIZE];
+    int              r = -1;
     
+    sa_load_and_init_units(&mbslaves, &dbconns_for_units, &units_count);
     
-    rc = sa_open_conn(&db);
-    printf("sa_open_conn called, rc = %d\n", rc);
-    slaves_count = sa_count_stmt(db, "units", NULL);
-    printf("slaves_count = %d\n", slaves_count);
-    //printf("id: %d, ip: %s\n", unit_list.slave->id, unit_list.slave->ip);
-    
-    if (slaves_count == -1){
-        fprintf(stderr, "Something went wrong counting slaves, quitting.\n");
-        exit(1);
-    }
-    
-    dbconns_for_slaves = malloc(slaves_count * sizeof(dbconns_for_slaves));
-    
-    for (int i = 0; i < slaves_count; i++){
-        rc = sa_open_conn(&dbconns_for_slaves[i]);
-        if (rc != SQLITE_OK){
-            fprintf(stderr, 
-                    "Could not open sqlite-connection for slave %d\nExiting\n", i);
-            exit(1);
-        }
-        printf("Opening sqlite-conn for slave %d -- OK!\n", i);
-    }
-    
-    sock_fds = malloc(slaves_count * sizeof(int*));
-    
-    mbslaves = malloc(slaves_count * sizeof(ModbusSlave **));
-    for (int i = 0; i < slaves_count; i++){
-        mbslaves[i] = malloc(sizeof(ModbusSlave));
-    }
-    sa_get_unit_list(db, mbslaves, slaves_count);
+    sock_fds = malloc(units_count * sizeof(int*));
     printf("After sa_get_unit_list\n");
-    for (int i = 0; i < slaves_count; i++){
-        printf("mbslaves[%d]->ip = %s\n",       i, mbslaves[i]->ip);
-        printf("mbslaves[%d]->id = %d\n",       i, mbslaves[i]->id);
-        printf("mbslaves[%d]->port = %d\n",     i, mbslaves[i]->port);
-        printf("mbslaves[%d]->n_of_dis = %d\n", i, mbslaves[i]->n_of_dis);
+    for (int i = 0; i < units_count; i++){
+        printf("mbslaves[%d].ip = %s\n",       i, mbslaves[i].ip);
+        printf("mbslaves[%d].id = %d\n",       i, mbslaves[i].id);
+        printf("mbslaves[%d].port = %d\n",     i, mbslaves[i].port);
+        printf("mbslaves[%d].n_of_dis = %d\n", i, mbslaves[i].n_of_dis);
     }
 
-    int r = -1;
-    for (int i = 0; i < slaves_count; i++){
-        r = tcpcli_connect(mbslaves[i]->ip, mbslaves[i]->port, &sock_fds[i], errmsg);
+    for (int i = 0; i < units_count; i++){
+        r = tcpcli_connect(mbslaves[i].ip, mbslaves[i].port, &sock_fds[i], errmsg);
         if (r != 0){
-            printf("Could not connect to %s:%d because:\n", mbslaves[i]->ip, mbslaves[i]->port);
+            printf("Could not connect to %s:%d because:\n", mbslaves[i].ip, mbslaves[i].port);
             printf("   %s\n", errmsg);
             continue;
         }
-        printf("Connected to %s:%d successfully!\n", mbslaves[i]->ip, mbslaves[i]->port);
+        uint16_t state;
+        uint16_t exception;
+        printf("Connected to %s:%d successfully!\n", mbslaves[i].ip, mbslaves[i].port);
+        mbcli_get_unit_state(sock_fds[i], 0x10, mbslaves[i].id, mbslaves[i].n_of_dis,
+                                 &state, &exception);
     }
-    
-    
+ 
     printf("got past tcpcli_connect\n");
-    if (r != 0){
-        printf("Something was unsuccessfull during connect attempt\n");
-        printf("r = %d", r);
-        printf(errmsg);
-        printf("\n");
-    }
 
-    for (int i = 0; i < slaves_count; i++){
+
+    for (int i = 0; i < units_count; i++){
         close(sock_fds[i]);
     }
-    
-    for (int i = 0; i < slaves_count; i++){
-        free(mbslaves[i]);
-    }
+    printf("Closed all sockets!\n");
     free(mbslaves);
     
-    free(errmsg);
-
-    rc = sqlite3_close(db);
-    
+    //Close all db connections
+    for (int i = 0; i < units_count; i++){
+        sqlite3_close(dbconns_for_units[i]);
+    }
+    free(dbconns_for_units);
     printf("sqlite3_close called, rc=%d\n", rc);
 
+}
+
+void loop(){
+    for(;;){
+        
+    }
 }
