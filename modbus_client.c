@@ -34,14 +34,23 @@ int mbcli_get_unit_state(const int        sockfd,
             mbap_header.msg_len, 
             mbap_header.unit_id);
     printf("fcode=0x%02x\n", response[MB_FCODE_OFFSET]);
-    if (response[MB_FCODE_OFFSET] & 0x80){
-        printf("WARNING: Exception set!\n");
-    }
     printf("Data (hex): \n");
-    for (size_t i = 0; i < mbap_header.msg_len; i++){
-        printf("%02x ", response[MB_DATA_OFFSET + i]);
+    //for (size_t i = 0; i < mbap_header.msg_len; i++){
+    for (size_t i = 0; i < mbap_header.msg_len+8; i++){
+        //printf("%02x ", response[MB_DATA_OFFSET + i]);
+        printf("%02x ", response[i]);
     }
     printf("\n");
+    // response[MB_DATA_OFFSET + 1] contains num of bytes to follow in the 
+    // FC 02 specific message
+    *state = (response[MB_DATA_OFFSET + 2] << 8) | (response[MB_DATA_OFFSET + 1]);
+    *exception = 0;
+
+    if (response[MB_FCODE_OFFSET] & MB_FCODE_EXCEPTION_BITMASK){
+        printf("WARNING: Exception set!\n");
+        *exception = response[MB_FCODE_OFFSET + 1];
+    }
+    return 0;
 }
 
 
@@ -96,7 +105,7 @@ static int mbcli_poll_gateway(int       sockfd,
          error("ERROR reading from socket");
     }
     else{
-        printf("Successfully read %d bytes of response\n", bytes_read);
+        printf("Successfully read %zu bytes of response\n", bytes_read);
         print_bytes(&buffer[MBAP_HEADER_SIZE], bytes_read);
     }
     size_t bytes_to_copy = MBAP_HEADER_SIZE + pdu_len;

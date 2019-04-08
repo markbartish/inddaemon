@@ -25,7 +25,6 @@
 #include "modbus.h"
 #include "gateway_client_thread.h"
 #include "utils.h"
-#include "config.h"
 #include "tcp_client.h"
 #include "modbus_client.h"
 #include "sqlite_adapter.h"
@@ -58,12 +57,14 @@ int main(int argc, char** argv){
     sqlite3       ** dbconns_for_units;
     char             errmsg[BUF_SIZE];
     int              r = -1;
+    sqlite3_int64    poll_id = -1;
     
     sa_load_and_init_units(&mbslaves, &dbconns_for_units, &units_count);
     
     sock_fds = malloc(units_count * sizeof(int*));
     printf("After sa_get_unit_list\n");
     for (int i = 0; i < units_count; i++){
+        printf("mbslaves[%d].db_id = %u\n",       i, mbslaves[i].db_id);
         printf("mbslaves[%d].ip = %s\n",       i, mbslaves[i].ip);
         printf("mbslaves[%d].id = %d\n",       i, mbslaves[i].id);
         printf("mbslaves[%d].port = %d\n",     i, mbslaves[i].port);
@@ -77,11 +78,21 @@ int main(int argc, char** argv){
             printf("   %s\n", errmsg);
             continue;
         }
+        uint16_t trans_id = 1;
         uint16_t state;
         uint16_t exception;
         printf("Connected to %s:%d successfully!\n", mbslaves[i].ip, mbslaves[i].port);
-        mbcli_get_unit_state(sock_fds[i], 0x10, mbslaves[i].id, mbslaves[i].n_of_dis,
+        sa_create_poll_trans(dbconns_for_units[i], mbslaves[i].db_id, trans_id, &poll_id);
+        uint64_t send_time = utils_get_time_millis();
+        sa_write_poll_trans_send(dbconns_for_units[i], poll_id, trans_id, send_time);
+        mbcli_get_unit_state(sock_fds[i], trans_id, mbslaves[i].id, mbslaves[i].n_of_dis,
                                  &state, &exception);
+        uint64_t receive_time = utils_get_time_millis();
+        printf ("state = 0x%04x, exception = 0x%04x\n", state, exception);
+        sa_write_poll_trans_receive(dbconns_for_units[i], 
+                                    poll_id, trans_id, 
+                                    receive_time, 
+                                    state, exception);
     }
  
     printf("got past tcpcli_connect\n");

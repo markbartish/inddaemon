@@ -31,7 +31,6 @@
                    displayName="Source Files"
                    projectFiles="true">
       <itemPath>client.c</itemPath>
-      <itemPath>config.c</itemPath>
       <itemPath>gateway_client_thread.c</itemPath>
       <itemPath>main.c</itemPath>
       <itemPath>modbus.c</itemPath>

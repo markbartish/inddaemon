@@ -36,7 +36,6 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/client.o \
-	${OBJECTDIR}/config.o \
 	${OBJECTDIR}/gateway_client_thread.o \
 	${OBJECTDIR}/main.o \
 	${OBJECTDIR}/modbus.o \
@@ -82,11 +81,6 @@ ${OBJECTDIR}/client.o: client.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.c) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/client.o client.c
-
-${OBJECTDIR}/config.o: config.c
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.c) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/config.o config.c
 
 ${OBJECTDIR}/gateway_client_thread.o: gateway_client_thread.c
 	${MKDIR} -p ${OBJECTDIR}
@@ -142,19 +136,6 @@ ${OBJECTDIR}/client_nomain.o: ${OBJECTDIR}/client.o client.c
 	    $(COMPILE.c) -g -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/client_nomain.o client.c;\
 	else  \
 	    ${CP} ${OBJECTDIR}/client.o ${OBJECTDIR}/client_nomain.o;\
-	fi
-
-${OBJECTDIR}/config_nomain.o: ${OBJECTDIR}/config.o config.c 
-	${MKDIR} -p ${OBJECTDIR}
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/config.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.c) -g -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/config_nomain.o config.c;\
-	else  \
-	    ${CP} ${OBJECTDIR}/config.o ${OBJECTDIR}/config_nomain.o;\
 	fi
 
 ${OBJECTDIR}/gateway_client_thread_nomain.o: ${OBJECTDIR}/gateway_client_thread.o gateway_client_thread.c 

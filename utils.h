@@ -22,7 +22,7 @@ extern "C" {
 
 void error(char *msg);  
     
-uint64_t getTimeMillis();
+uint64_t utils_get_time_millis();
 
 
 #ifdef __cplusplus
