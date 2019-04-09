@@ -36,7 +36,10 @@ int sa_open_conn(const char *db_filename, sqlite3 **ppDb){
     return(rc);
 }
 
-int sa_count_stmt(const char *db_filename, const char *table, const char *where_cond){
+int sa_count_stmt(const char * db_filename, 
+                  const char * table, 
+                  const char * where_cond, 
+                  size_t     * count){
     char           sql_statement[] = "SELECT COUNT(*) FROM %s";
     char           buf[BUF_SIZE];
     int            rc;
@@ -44,7 +47,10 @@ int sa_count_stmt(const char *db_filename, const char *table, const char *where_
     sqlite3      * pDb;
     sqlite3_stmt * pStmt;
     
-    sa_open_conn(db_filename, &pDb);
+    rc = sa_open_conn(db_filename, &pDb);
+    if (rc != SQLITE_OK){
+        return rc;
+    }
     snprintf(buf, BUF_SIZE, sql_statement, table);
     if (where_cond != NULL){
         printf("There is a where condition\n");
@@ -54,14 +60,15 @@ int sa_count_stmt(const char *db_filename, const char *table, const char *where_
     rc = sqlite3_prepare_v2(pDb, buf, strlen(buf), &pStmt, NULL);
     if (rc != SQLITE_OK){
         fprintf(stderr, "Error: %s\n", sqlite3_errmsg(pDb));
+        return rc;
     }
     
     while ((rc = sqlite3_step(pStmt)) == SQLITE_ROW){
-        cnt = sqlite3_column_int(pStmt, 0);
+        *count = sqlite3_column_int(pStmt, 0);
     }
     rc = sqlite3_finalize(pStmt);
     rc = sqlite3_close(pDb);
-    return cnt;
+    return rc;
 }
 
 int sa_insert(sqlite3 *pDb, char table_name[], DataKvp values[]){
@@ -134,9 +141,12 @@ int sa_load_and_init_units(const char   * db_filename,
                            sqlite3    *** dbconns_for_slaves, 
                            size_t       * units_count){
     int           rc;
-
-    printf("sa_open_conn called, rc = %d\n", rc);
-    *units_count = sa_count_stmt(db_filename, "units", NULL);
+    
+    rc = sa_count_stmt(db_filename, "units", NULL, units_count);
+    if (rc != SQLITE_OK){
+        fprintf(stderr, "Error executing units count query\n");
+        return rc;
+    }
     printf("units_count = %u\n", *units_count);
 
     if (*units_count == -1){

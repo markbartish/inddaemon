@@ -48,6 +48,8 @@ int main(int argc, char** argv){
     
     if (argc > 1){
         strncpy(dbfile_name, argv[1], BUF_SIZE);
+        printf("Database file name given.\n");
+        printf("Will use '%s' as db\n", dbfile_name);
     }
     else{
         strncpy(dbfile_name, DB_NAME, BUF_SIZE);
@@ -111,10 +113,11 @@ int main(int argc, char** argv){
     
     //Close all db connections
     for (int i = 0; i < units_count; i++){
-        sqlite3_close(dbconns_for_units[i]);
+        rc = sqlite3_close(dbconns_for_units[i]);
+        printf("sqlite3_close called for conn %d, rc=%d\n", i, rc);
     }
     free(dbconns_for_units);
-    printf("sqlite3_close called, rc=%d\n", rc);
+    
 
 }
 

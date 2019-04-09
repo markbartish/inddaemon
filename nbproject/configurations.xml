@@ -76,8 +76,6 @@
       </compileType>
       <item path="client.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="config.c" ex="false" tool="0" flavor2="0">
-      </item>
       <item path="config.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="data/unit_di_portmap_data.sql" ex="false" tool="3" flavor2="0">
@@ -159,8 +157,6 @@
         </linkerTool>
       </compileType>
       <item path="client.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="config.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="config.h" ex="false" tool="3" flavor2="0">
       </item>
