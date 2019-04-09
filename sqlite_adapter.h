@@ -87,7 +87,11 @@ int sa_get_unit_list(const char    * db_filename,
     sqlite3       * pDb;
     sqlite3_stmt  * pStmt;
 
-    sa_open_conn(db_filename, &pDb);
+    rc = sa_open_conn(db_filename, &pDb);
+    if (rc != SQLITE_OK){
+        fprintf(stderr, "Error: %s\n", sqlite3_errmsg(pDb));
+        return rc;
+    }
     snprintf(sql_statement, BUF_SIZE, "SELECT id, ip, port, slave_id, di_count, inverted FROM %s;", DB_UNITS_TABLE_NAME);
     rc = sqlite3_prepare_v2(pDb, sql_statement, sizeof(sql_statement), &pStmt, NULL);
     
