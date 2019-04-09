@@ -43,12 +43,12 @@ int sa_count_stmt(const char * db_filename,
     char           sql_statement[] = "SELECT COUNT(*) FROM %s";
     char           buf[BUF_SIZE];
     int            rc;
-    int            cnt = -1;
     sqlite3      * pDb;
     sqlite3_stmt * pStmt;
     
     rc = sa_open_conn(db_filename, &pDb);
     if (rc != SQLITE_OK){
+        fprintf(stderr, "Error: %s\n", sqlite3_errmsg(pDb));
         return rc;
     }
     snprintf(buf, BUF_SIZE, sql_statement, table);
@@ -87,7 +87,11 @@ int sa_get_unit_list(const char    * db_filename,
     sqlite3       * pDb;
     sqlite3_stmt  * pStmt;
 
-    sa_open_conn(db_filename, &pDb);
+    rc = sa_open_conn(db_filename, &pDb);
+    if (rc != SQLITE_OK){
+        fprintf(stderr, "Error: %s\n", sqlite3_errmsg(pDb));
+        return rc;
+    }
     snprintf(sql_statement, BUF_SIZE, "SELECT id, ip, port, slave_id, di_count, inverted FROM %s;", DB_UNITS_TABLE_NAME);
     rc = sqlite3_prepare_v2(pDb, sql_statement, sizeof(sql_statement), &pStmt, NULL);
     
@@ -178,6 +182,7 @@ int sa_load_and_init_units(const char   * db_filename,
         }
         printf("Opening sqlite-conn for slave %d -- OK!\n", i);
     }
+    return rc;
 }
 
 /*

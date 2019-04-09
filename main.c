@@ -55,7 +55,12 @@ int main(int argc, char** argv){
         strncpy(dbfile_name, DB_NAME, BUF_SIZE);
     }
     
-    sa_load_and_init_units(dbfile_name, &mbslaves, &dbconns_for_units, &units_count);
+    rc = sa_load_and_init_units(dbfile_name, &mbslaves, 
+                                &dbconns_for_units, &units_count);
+    if (rc != SQLITE_OK){
+        fprintf(stderr, "Error: Could not load units\n");
+        exit(rc);
+    }
     
     sock_fds = malloc(units_count * sizeof(int*));
     printf("After sa_get_unit_list\n");
