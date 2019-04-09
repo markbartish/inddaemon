@@ -40,8 +40,8 @@ int sa_count_stmt(const char * db_filename,
                   const char * table, 
                   const char * where_cond, 
                   size_t     * count){
-    char           sql_statement[] = "SELECT COUNT(*) FROM %s";
-    char           buf[BUF_SIZE];
+    char           sql_statement_templ[] = "SELECT COUNT(*) FROM %s %s;";
+    char           sql_statement[BUF_SIZE];
     int            rc;
     sqlite3      * pDb;
     sqlite3_stmt * pStmt;
@@ -51,13 +51,11 @@ int sa_count_stmt(const char * db_filename,
         fprintf(stderr, "Error: %s\n", sqlite3_errmsg(pDb));
         return rc;
     }
-    snprintf(buf, BUF_SIZE, sql_statement, table);
-    if (where_cond != NULL){
-        printf("There is a where condition\n");
-        snprintf(buf, BUF_SIZE, "%s WHERE %s", buf, where_cond);
-    }
-    snprintf(buf, BUF_SIZE, "%s;", buf);
-    rc = sqlite3_prepare_v2(pDb, buf, strlen(buf), &pStmt, NULL);
+    snprintf(sql_statement, BUF_SIZE, sql_statement_templ, 
+             table, where_cond == NULL ? "" : where_cond);
+    printf("Count statement:\n");
+    printf("'%'\n", sql_statement);
+    rc = sqlite3_prepare_v2(pDb, sql_statement, strlen(sql_statement), &pStmt, NULL);
     if (rc != SQLITE_OK){
         fprintf(stderr, "Error: %s\n", sqlite3_errmsg(pDb));
         return rc;
