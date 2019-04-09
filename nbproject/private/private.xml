@@ -7,11 +7,8 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/Mark/Documents/NetBeansProjects/IndDaemon/utils.h</file>
             <file>file:/C:/Users/Mark/Documents/NetBeansProjects/IndDaemon/main.c</file>
-            <file>file:/C:/Users/Mark/Documents/NetBeansProjects/IndDaemon/modbus_slave.h</file>
-            <file>file:/C:/Users/Mark/Documents/NetBeansProjects/IndDaemon/modbus_client.c</file>
-            <file>file:/C:/Users/Mark/Documents/NetBeansProjects/IndDaemon/modbus_client.h</file>
+            <file>file:/C:/Users/Mark/Documents/NetBeansProjects/IndDaemon/modbus.c</file>
             <file>file:/C:/Users/Mark/Documents/NetBeansProjects/IndDaemon/sqlite_adapter.h</file>
         </group>
     </open-files>

@@ -4,7 +4,9 @@
  * and open the template in the editor.
  */
 #include <string.h>
+#include <stdio.h>
 
+#include "utils.h"
 #include "modbus.h"
 
 static int modbus_construct_mbap_header(struct mbap_t mbap, uint8_t *result_buf){
@@ -40,11 +42,17 @@ static void modbus_set_transaction_id(uint8_t *req, uint16_t trans_id){
 }
 
 int modbus_construct_request(uint16_t trans_id, uint8_t unit_id,
-                      uint16_t n_of_dis, uint8_t *out_buf, size_t out_buf_size){
+                      uint16_t n_of_dis, uint8_t * out_buf, size_t out_buf_size, 
+                      size_t * req_size){
     struct mbap_t mbap;
     struct request_pdu_t reqpdu;
     uint8_t mbap_buf[MBAP_HEADER_SIZE];
     uint8_t request_pdu_buf[REQUEST_PDU_SIZE];
+    
+    if (out_buf_size < sizeof(mbap_buf) + sizeof(request_pdu_buf)){
+        // Not enough size allocated to produce the request
+        return -1;
+    }
     
     mbap.trans_id = trans_id; // unit specific parameter
     mbap.proto_id = MB_PROTO_ID;
@@ -57,17 +65,20 @@ int modbus_construct_request(uint16_t trans_id, uint8_t unit_id,
     
     modbus_construct_mbap_header(mbap, (uint8_t*) &mbap_buf);
     modbus_construct_request_pdu(reqpdu, (uint8_t*) &request_pdu_buf);
+
     
     memcpy(out_buf, mbap_buf, sizeof(mbap_buf));
     memcpy(&out_buf[sizeof(mbap_buf)], request_pdu_buf, sizeof(request_pdu_buf));
-
-    //printf("(construct_request) MBAP Header\n");
-    //print_bytes(&mbap_buf, sizeof(mbap_buf));
-    //printf("(construct_request) PDU\n");
-    //print_bytes(&request_pdu_buf, sizeof(request_pdu_buf));
-    //printf("(construct_request) Total array\n");
-    //print_bytes(out_buf, out_buf_size);    
-    //printf("\n");
+    *req_size = sizeof(mbap_buf) + sizeof(request_pdu_buf);
+    /*
+    printf("(construct_request) MBAP Header\n");
+    print_bytes(mbap_buf, sizeof(mbap_buf));
+    printf("(construct_request) PDU\n");
+    print_bytes(request_pdu_buf, sizeof(request_pdu_buf));
+    printf("(construct_request) Total array\n");
+    print_bytes(out_buf, *req_size);    
+    printf("\n");
+    */
     return 0;
 }
 

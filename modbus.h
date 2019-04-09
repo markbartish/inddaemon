@@ -49,7 +49,8 @@ static int  modbus_construct_mbap_header(struct mbap_t mbap_buf, uint8_t *result
 static int  modbus_construct_request_pdu(struct request_pdu_t req_pdu_buf, uint8_t *result_buf);
 static void modbus_set_transaction_id(uint8_t *req, uint16_t trans_id);
 int         modbus_construct_request(uint16_t trans_id, uint8_t unit_id,
-                                     uint16_t n_of_dis, uint8_t *out_buf, size_t out_buf_size);
+                                     uint16_t n_of_dis, uint8_t *out_buf, 
+                                     size_t out_buf_size, size_t * request_size);
 int         modbus_decode_mbap_header(const uint8_t *arr, struct mbap_t *header);
 
 #ifdef __cplusplus

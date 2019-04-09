@@ -24,9 +24,11 @@ int mbcli_get_unit_state(const int        sockfd,
     uint8_t request[MODBUS_RESPONSE_BUF_SIZE];
     uint8_t response[MODBUS_RESPONSE_BUF_SIZE];
     Mbap    mbap_header;
+    size_t  request_size;
     
-    modbus_construct_request(trans_id, unit_id, di_count, request, MODBUS_REQUEST_BUF_SIZE);
-    mbcli_poll_gateway(sockfd, request, MODBUS_REQUEST_BUF_SIZE, response, MODBUS_RESPONSE_BUF_SIZE);
+    modbus_construct_request(trans_id, unit_id, di_count, 
+            request, MODBUS_REQUEST_BUF_SIZE, &request_size);
+    mbcli_poll_gateway(sockfd, request, request_size, response, MODBUS_RESPONSE_BUF_SIZE);
     modbus_decode_mbap_header(response, &mbap_header);
     printf("Got MBAP Header: trans=0x%04x, proto=0x%04x, length=0x%04x, unit=0x%02x\n", 
             mbap_header.trans_id,
@@ -73,10 +75,17 @@ static int mbcli_poll_gateway(int       sockfd,
                        size_t    req_size, 
                        uint8_t * resp_buf, 
                        size_t    resp_buf_size){
-
-    char buffer[256];
-
-    size_t bytes_written = write(sockfd, req, req_size);
+    const size_t DATA_BUF_SIZE = 256;
+    char buffer[DATA_BUF_SIZE];
+    size_t mbap_header_bytes = 0;
+    size_t pdu_data_bytes = 0;
+    size_t bytes_written = 0;
+    size_t bytes_read = 0;
+    
+    printf("       Request: \n");
+    print_bytes(req, req_size);
+    
+    bytes_written = write(sockfd, req, req_size);
     if (bytes_written < 0){
         error("ERROR writing to socket");
     }
@@ -87,27 +96,31 @@ static int mbcli_poll_gateway(int       sockfd,
     
     //MBAP Header
     printf("Attempting to read MBAP header\n");
-    size_t bytes_read = read(sockfd, buffer, MBAP_HEADER_SIZE);
+    bytes_read = read(sockfd, buffer, MBAP_HEADER_SIZE);
     if (bytes_read < 0){
          error("ERROR reading from socket");
     }
     else{
+        mbap_header_bytes = bytes_read;
         printf("Successfully read %zu bytes of response\n", bytes_read);
         print_bytes(buffer, bytes_read);
     }
     Mbap mbap_header;
     modbus_decode_mbap_header(buffer, &mbap_header);
-    uint16_t pdu_len = mbap_header.msg_len - 1;
+    uint16_t pdu_len = mbap_header.msg_len;
     // PDU
     printf("Attempting to read PDU\n");
-    bytes_read = read(sockfd, &buffer[MBAP_HEADER_SIZE], pdu_len);
+    bytes_read = read(sockfd, &buffer[MBAP_HEADER_SIZE], DATA_BUF_SIZE);
     if (bytes_read < 0){
-         error("ERROR reading from socket");
+        error("ERROR reading from socket");
     }
     else{
+        pdu_data_bytes = bytes_read;
         printf("Successfully read %zu bytes of response\n", bytes_read);
         print_bytes(&buffer[MBAP_HEADER_SIZE], bytes_read);
     }
+    //printf("      mbap_header_bytes = %u, pdu_data_bytes = %u\n", 
+    //       mbap_header_bytes, pdu_data_bytes);
     size_t bytes_to_copy = MBAP_HEADER_SIZE + pdu_len;
     if (bytes_to_copy > resp_buf_size){ bytes_to_copy = resp_buf_size; }
     memcpy(resp_buf, buffer, bytes_to_copy);

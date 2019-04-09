@@ -24,6 +24,8 @@ void error(char *msg);
     
 uint64_t utils_get_time_millis();
 
+void print_bytes_msg(void *arr, char *msg, uint32_t size);
+void print_bytes(void *arr, uint32_t size);
 
 #ifdef __cplusplus
 }

@@ -29,20 +29,7 @@
 #include "modbus_client.h"
 #include "sqlite_adapter.h"
 
-void print_bytes_msg(void *arr, char *msg, uint32_t size){
-    for (int i=0; i < size; i++){
-        printf("%02x ", ((uint8_t*) arr)[i]);
-    }
-    printf("%s", msg);
-    printf("\n");
-}
 
-void print_bytes(void *arr, uint32_t size){
-    for (int i=0; i < size; i++){
-        printf("%02x ", ((uint8_t*) arr)[i]);
-    }
-    printf("\n");
-}
 
 int check_stop(pthread_t tid){
     return 1;
@@ -70,36 +57,47 @@ int main(int argc, char** argv){
         printf("mbslaves[%d].port = %d\n",     i, mbslaves[i].port);
         printf("mbslaves[%d].n_of_dis = %d\n", i, mbslaves[i].n_of_dis);
     }
-
+    
+    // Make connections for all units
+    for (int i = 0; i < units_count; i++){sock_fds[i] = 0;}
     for (int i = 0; i < units_count; i++){
         r = tcpcli_connect(mbslaves[i].ip, mbslaves[i].port, &sock_fds[i], errmsg);
         if (r != 0){
-            printf("Could not connect to %s:%d because:\n", mbslaves[i].ip, mbslaves[i].port);
-            printf("   %s\n", errmsg);
+            fprintf(stderr, "Could not connect to %s:%d because:\n", mbslaves[i].ip, mbslaves[i].port);
+            fprintf(stderr, "   %s\n", errmsg);
             continue;
         }
-        uint16_t trans_id = 1;
-        uint16_t state;
-        uint16_t exception;
-        printf("Connected to %s:%d successfully!\n", mbslaves[i].ip, mbslaves[i].port);
-        sa_create_poll_trans(dbconns_for_units[i], mbslaves[i].db_id, trans_id, &poll_id);
-        uint64_t send_time = utils_get_time_millis();
-        sa_write_poll_trans_send(dbconns_for_units[i], poll_id, trans_id, send_time);
-        mbcli_get_unit_state(sock_fds[i], trans_id, mbslaves[i].id, mbslaves[i].n_of_dis,
-                                 &state, &exception);
-        uint64_t receive_time = utils_get_time_millis();
-        printf ("state = 0x%04x, exception = 0x%04x\n", state, exception);
-        sa_write_poll_trans_receive(dbconns_for_units[i], 
-                                    poll_id, trans_id, 
-                                    receive_time, 
-                                    state, exception);
+    }
+    
+    int pollcount = 5;
+    uint16_t trans_id = 0;
+    uint16_t state = 0;
+    uint16_t exception = 0;
+    for (int p = 0; p < pollcount; p++){
+        for (int i = 0; i < units_count; i++){
+            if (sock_fds[i] == 0){ continue; }
+            trans_id = p % 65536;
+            state = 0;
+            exception = 0;
+            printf("Connected to %s:%d successfully!\n", mbslaves[i].ip, mbslaves[i].port);
+            sa_create_poll_trans(dbconns_for_units[i], mbslaves[i].db_id, trans_id, &poll_id);
+            uint64_t send_time = utils_get_time_millis();
+            sa_write_poll_trans_send(dbconns_for_units[i], poll_id, trans_id, send_time);
+            mbcli_get_unit_state(sock_fds[i], trans_id, mbslaves[i].id, mbslaves[i].n_of_dis,
+                                     &state, &exception);
+            uint64_t receive_time = utils_get_time_millis();
+            printf ("state = 0x%04x, exception = 0x%04x\n", state, exception);
+            sa_write_poll_trans_receive(dbconns_for_units[i], 
+                                        poll_id, trans_id, 
+                                        receive_time, 
+                                        state, exception);
+        }
+        sleep(1);
     }
  
-    printf("got past tcpcli_connect\n");
-
-
     for (int i = 0; i < units_count; i++){
         close(sock_fds[i]);
+        sock_fds[i] = 0;
     }
     printf("Closed all sockets!\n");
     free(mbslaves);

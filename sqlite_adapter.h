@@ -21,6 +21,12 @@ typedef struct data_kvp_t{
     void * value;
 } DataKvp;
     
+static int sa_write_poll_trans_common(sqlite3 * pDb, 
+                               const char sql_statement[], 
+                               size_t stmt_len);
+
+
+
 int sa_open_conn(sqlite3 **ppDb){
     int rc = sqlite3_open_v2(DB_NAME, ppDb, DB_OPEN_MODE, NULL);
     if (rc != SQLITE_OK){
@@ -207,7 +213,8 @@ int sa_write_poll_trans_send(sqlite3            * pDb,
                              const sqlite_int64   poll_id,
                              const uint16_t       trans_id,
                              const uint64_t       start_time){
-    const char      sql_statement_templ[] = "UPDATE %s SET trans_init_time = %llu WHERE id = %lld;";
+    const char      sql_statement_templ[] = 
+    "UPDATE %s SET trans_init_time = %llu WHERE id = %lld;";
     char            sql_statement[BUF_SIZE];
 
     snprintf(sql_statement, BUF_SIZE, sql_statement_templ, DB_POLLS_TABLE_NAME,
@@ -226,15 +233,20 @@ int sa_write_poll_trans_receive(sqlite3            * pDb,
                                 const uint16_t       state,
                                 const uint16_t       excp_data){
     const char      sql_statement_templ[] = 
-    "UPDATE %s SET trans_end_time = %llu, state_data = %u, mb_excp_data = %u WHERE id = %lld;";
+    "UPDATE %s SET trans_end_time = %llu, state_data = %s, mb_excp_data = %u WHERE id = %lld;";
     char            sql_statement[BUF_SIZE];
+    char            state_str[BUF_SIZE] = "NULL";
+    
+    if (excp_data == 0){
+        snprintf(state_str, BUF_SIZE, "%u", state);
+    }
     
     snprintf(sql_statement, BUF_SIZE, sql_statement_templ, DB_POLLS_TABLE_NAME,
-             end_time, state, excp_data, poll_id);
+             end_time, state_str, excp_data, poll_id);
     return sa_write_poll_trans_common(pDb, sql_statement, BUF_SIZE);
 }
 
-int sa_write_poll_trans_common(sqlite3 * pDb, 
+static int sa_write_poll_trans_common(sqlite3 * pDb, 
                                const char sql_statement[], 
                                size_t stmt_len){
     int             rc;

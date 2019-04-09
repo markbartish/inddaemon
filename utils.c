@@ -28,3 +28,18 @@ uint64_t utils_get_time_millis(){
     gettimeofday(&tv, NULL);
     return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
 }
+
+void print_bytes_msg(void *arr, char *msg, uint32_t size){
+    for (int i=0; i < size; i++){
+        printf("%02x ", ((uint8_t*) arr)[i]);
+    }
+    printf("%s", msg);
+    printf("\n");
+}
+
+void print_bytes(void *arr, uint32_t size){
+    for (int i=0; i < size; i++){
+        printf("%02x ", ((uint8_t*) arr)[i]);
+    }
+    printf("\n");
+}

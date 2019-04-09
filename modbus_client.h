@@ -21,6 +21,12 @@ extern "C" {
 #define MODBUS_REQUEST_BUF_SIZE  256
 #define MODBUS_RESPONSE_BUF_SIZE 256
 
+int mbcli_get_unit_state(const int        sockfd, 
+                         const uint16_t   trans_id,
+                         const uint8_t    unit_id,
+                         const uint16_t   di_count,
+                         uint16_t       * state,
+                         uint16_t       * exception);
 
 static int mbcli_poll_gateway(int sockfd,
                  uint8_t *req, 
