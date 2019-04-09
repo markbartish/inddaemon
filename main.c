@@ -36,7 +36,6 @@ int check_stop(pthread_t tid){
 }
 
 int main(int argc, char** argv){
-    //const size_t              REQUEST_SIZE = MBAP_HEADER_SIZE + REQUEST_PDU_SIZE;
     int              rc;
     int            * sock_fds;
     size_t           units_count;
@@ -45,8 +44,16 @@ int main(int argc, char** argv){
     char             errmsg[BUF_SIZE];
     int              r = -1;
     sqlite3_int64    poll_id = -1;
+    char             dbfile_name[BUF_SIZE];
     
-    sa_load_and_init_units(&mbslaves, &dbconns_for_units, &units_count);
+    if (argc > 1){
+        strncpy(dbfile_name, argv[1], BUF_SIZE);
+    }
+    else{
+        strncpy(dbfile_name, DB_NAME, BUF_SIZE);
+    }
+    
+    sa_load_and_init_units(dbfile_name, &mbslaves, &dbconns_for_units, &units_count);
     
     sock_fds = malloc(units_count * sizeof(int*));
     printf("After sa_get_unit_list\n");

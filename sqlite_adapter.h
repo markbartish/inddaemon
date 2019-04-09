@@ -27,8 +27,8 @@ static int sa_write_poll_trans_common(sqlite3 * pDb,
 
 
 
-int sa_open_conn(sqlite3 **ppDb){
-    int rc = sqlite3_open_v2(DB_NAME, ppDb, DB_OPEN_MODE, NULL);
+int sa_open_conn(const char *db_filename, sqlite3 **ppDb){
+    int rc = sqlite3_open_v2(db_filename, ppDb, DB_OPEN_MODE, NULL);
     if (rc != SQLITE_OK){
         fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(*ppDb));
         sqlite3_close(*ppDb);
@@ -36,7 +36,7 @@ int sa_open_conn(sqlite3 **ppDb){
     return(rc);
 }
 
-int sa_count_stmt(const char *table, const char *where_cond){
+int sa_count_stmt(const char *db_filename, const char *table, const char *where_cond){
     char           sql_statement[] = "SELECT COUNT(*) FROM %s";
     char           buf[BUF_SIZE];
     int            rc;
@@ -44,7 +44,7 @@ int sa_count_stmt(const char *table, const char *where_cond){
     sqlite3      * pDb;
     sqlite3_stmt * pStmt;
     
-    sa_open_conn(&pDb);
+    sa_open_conn(db_filename, &pDb);
     snprintf(buf, BUF_SIZE, sql_statement, table);
     if (where_cond != NULL){
         printf("There is a where condition\n");
@@ -72,14 +72,15 @@ int sa_update(sqlite3 *pDb, char table_name[], DataKvp values[], char where_clau
     
 }
 
-int sa_get_unit_list(ModbusSlave  ** units_list, 
+int sa_get_unit_list(const char    * db_filename,
+                     ModbusSlave  ** units_list, 
                      const size_t    units_count){
     int rc;
     char          sql_statement[BUF_SIZE];
     sqlite3       * pDb;
     sqlite3_stmt  * pStmt;
 
-    sa_open_conn(&pDb);
+    sa_open_conn(db_filename, &pDb);
     snprintf(sql_statement, BUF_SIZE, "SELECT id, ip, port, slave_id, di_count, inverted FROM %s;", DB_UNITS_TABLE_NAME);
     rc = sqlite3_prepare_v2(pDb, sql_statement, sizeof(sql_statement), &pStmt, NULL);
     
@@ -128,13 +129,14 @@ int sa_get_unit_list(ModbusSlave  ** units_list,
     return rc;
 }
 
-int sa_load_and_init_units(ModbusSlave ** units_list, 
+int sa_load_and_init_units(const char   * db_filename,
+                           ModbusSlave ** units_list, 
                            sqlite3    *** dbconns_for_slaves, 
                            size_t       * units_count){
     int           rc;
 
     printf("sa_open_conn called, rc = %d\n", rc);
-    *units_count = sa_count_stmt("units", NULL);
+    *units_count = sa_count_stmt(db_filename, "units", NULL);
     printf("units_count = %u\n", *units_count);
 
     if (*units_count == -1){
@@ -142,7 +144,7 @@ int sa_load_and_init_units(ModbusSlave ** units_list,
         exit(1);
     }
     
-    rc = sa_get_unit_list(units_list, *units_count);
+    rc = sa_get_unit_list(db_filename, units_list, *units_count);
     printf("got past sa_get_unit_list, rc = %d\n", rc);
     printf("units_list = 0x%08x\n", units_list);
 
@@ -158,7 +160,7 @@ int sa_load_and_init_units(ModbusSlave ** units_list,
     printf("dbconns_for_slaves = 0x%08x\n", *dbconns_for_slaves);
 
     for (int i = 0; i < *units_count; i++){
-        rc = sa_open_conn(&(*dbconns_for_slaves)[i]);
+        rc = sa_open_conn(db_filename, &(*dbconns_for_slaves)[i]);
         if (rc != SQLITE_OK){
             fprintf(stderr, 
                     "Could not open sqlite-connection for slave %d\nExiting\n", i);
