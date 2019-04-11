@@ -13,7 +13,6 @@ extern "C" {
 #define BUF_SIZE 1024
 #define DB_POLLS_TABLE_NAME "polls"
 #define DB_UNITS_TABLE_NAME "units"
-#define DB_NAME "/home/Mark/nbproj/IndDaemon/inddaemon.db"
 #define DB_OPEN_MODE (SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX)
 
 typedef struct data_kvp_t{
@@ -36,25 +35,19 @@ int sa_open_conn(const char *db_filename, sqlite3 **ppDb){
     return(rc);
 }
 
-int sa_count_stmt(const char * db_filename, 
+int sa_count_stmt(sqlite3    * pDb, 
                   const char * table, 
                   const char * where_cond, 
                   size_t     * count){
     char           sql_statement_templ[] = "SELECT COUNT(*) FROM %s %s;";
     char           sql_statement[BUF_SIZE];
     int            rc;
-    sqlite3      * pDb;
     sqlite3_stmt * pStmt;
-    
-    rc = sa_open_conn(db_filename, &pDb);
-    if (rc != SQLITE_OK){
-        fprintf(stderr, "Error: %s\n", sqlite3_errmsg(pDb));
-        return rc;
-    }
+
     snprintf(sql_statement, BUF_SIZE, sql_statement_templ, 
              table, where_cond == NULL ? "" : where_cond);
     printf("Count statement:\n");
-    printf("'%'\n", sql_statement);
+    printf("'%s'\n", sql_statement);
     rc = sqlite3_prepare_v2(pDb, sql_statement, strlen(sql_statement), &pStmt, NULL);
     if (rc != SQLITE_OK){
         fprintf(stderr, "Error: %s\n", sqlite3_errmsg(pDb));
@@ -65,7 +58,6 @@ int sa_count_stmt(const char * db_filename,
         *count = sqlite3_column_int(pStmt, 0);
     }
     rc = sqlite3_finalize(pStmt);
-    rc = sqlite3_close(pDb);
     return rc;
 }
 
@@ -77,19 +69,13 @@ int sa_update(sqlite3 *pDb, char table_name[], DataKvp values[], char where_clau
     
 }
 
-int sa_get_unit_list(const char    * db_filename,
+int sa_get_unit_list(sqlite3       * pDb,
                      ModbusSlave  ** units_list, 
                      const size_t    units_count){
-    int rc;
-    char          sql_statement[BUF_SIZE];
-    sqlite3       * pDb;
+    int             rc = 0;
+    char            sql_statement[BUF_SIZE];
     sqlite3_stmt  * pStmt;
 
-    rc = sa_open_conn(db_filename, &pDb);
-    if (rc != SQLITE_OK){
-        fprintf(stderr, "Error: %s\n", sqlite3_errmsg(pDb));
-        return rc;
-    }
     snprintf(sql_statement, BUF_SIZE, "SELECT id, ip, port, slave_id, di_count, inverted FROM %s;", DB_UNITS_TABLE_NAME);
     rc = sqlite3_prepare_v2(pDb, sql_statement, sizeof(sql_statement), &pStmt, NULL);
     
@@ -130,21 +116,20 @@ int sa_get_unit_list(const char    * db_filename,
         c++;
     }
     
-    sqlite3_finalize(pStmt);
-    rc = sqlite3_close(pDb);
-    if (rc != SQLITE_OK){
-        fprintf(stderr, "Error: could not close db, rc = %d\n", rc);
+    if (rc != SQLITE_DONE){
+        return rc;
     }
+    
+    rc = sqlite3_finalize(pStmt);
     return rc;
 }
 
-int sa_load_and_init_units(const char   * db_filename,
-                           ModbusSlave ** units_list, 
-                           sqlite3    *** dbconns_for_slaves, 
+int sa_load_and_init_units(sqlite3      * pDb,
+                           ModbusSlave ** units_list,
                            size_t       * units_count){
     int           rc;
     
-    rc = sa_count_stmt(db_filename, "units", NULL, units_count);
+    rc = sa_count_stmt(pDb, "units", NULL, units_count);
     if (rc != SQLITE_OK){
         fprintf(stderr, "Error executing units count query\n");
         return rc;
@@ -156,7 +141,7 @@ int sa_load_and_init_units(const char   * db_filename,
         exit(1);
     }
     
-    rc = sa_get_unit_list(db_filename, units_list, *units_count);
+    rc = sa_get_unit_list(pDb, units_list, *units_count);
     printf("got past sa_get_unit_list, rc = %d\n", rc);
     printf("units_list = 0x%08x\n", units_list);
 
@@ -167,18 +152,23 @@ int sa_load_and_init_units(const char   * db_filename,
                                        (*units_list)[i].n_of_dis,
                                        (*units_list)[i].inverted);   
     }
-    
-    *dbconns_for_slaves = (sqlite3 **) malloc(*units_count * sizeof(sqlite3*));
-    printf("dbconns_for_slaves = 0x%08x\n", *dbconns_for_slaves);
+    return rc;
+}
 
-    for (int i = 0; i < *units_count; i++){
-        rc = sa_open_conn(db_filename, &(*dbconns_for_slaves)[i]);
-        if (rc != SQLITE_OK){
-            fprintf(stderr, 
-                    "Could not open sqlite-connection for slave %d\nExiting\n", i);
-            exit(1);
-        }
-        printf("Opening sqlite-conn for slave %d -- OK!\n", i);
+int sa_insert_poll_trans_send_stmt(sqlite3 * pDb, sqlite3_stmt  ** ppStmt){
+    int rc;
+    const char      sql_statement_templ[] = "INSERT INTO %s (%s) VALUES(%s);";
+    char            sql_statement[BUF_SIZE];
+    const char      values_list[]         = "?, ?, ?"; 
+    const char      column_list[]         = "unit_id, trans_id, trans_init_time";
+    
+    snprintf(sql_statement, BUF_SIZE, sql_statement_templ, DB_POLLS_TABLE_NAME, column_list, values_list);
+    rc = sqlite3_prepare_v2(pDb, sql_statement, sizeof(sql_statement), ppStmt, NULL);
+    
+    if (rc != SQLITE_OK){
+        fprintf(stderr, "Could not prepare SQL statement\n");
+        fprintf(stderr, "Error: %s\n", sqlite3_errmsg(pDb));
+        sqlite3_finalize(*ppStmt);
     }
     return rc;
 }
@@ -187,102 +177,110 @@ int sa_load_and_init_units(const char   * db_filename,
  * To be called when starting a modbus transaction.
  * Will issue an INSERT statement.
  */
-int sa_create_poll_trans(sqlite3            * pDb,
+int sa_insert_poll_trans_send(sqlite3_stmt       * pStmt_trans_start,
                          const uint16_t       unit_db_id,
                          const uint16_t       trans_id,
-                         sqlite_int64       * poll_id){
-    const char      column_list[]         = "unit_id, trans_id";
-    const char      values_list_templ[]   = "%u, %u";
-    const char      sql_statement_templ[] = "INSERT INTO %s (%s) VALUES(%s);";
-    char            values_list[BUF_SIZE];
-    char            sql_statement[BUF_SIZE];
-    sqlite3_stmt  * pStmt;
+                         const uint64_t       trans_init_time){
     int             rc;
     
-    snprintf(values_list, BUF_SIZE, values_list_templ, unit_db_id, trans_id);
-    snprintf(sql_statement, BUF_SIZE, sql_statement_templ, DB_POLLS_TABLE_NAME, column_list, values_list);
-    printf("sa_create_poll_trans: sql_statement: %s\n", sql_statement);
-    rc = sqlite3_prepare_v2(pDb, sql_statement, sizeof(sql_statement), &pStmt, NULL);
-    if (rc != SQLITE_OK){
-        fprintf(stderr, "Could not prepare SQL statement\n");
-        fprintf(stderr, "Error: %s\n", sqlite3_errmsg(pDb));
-        sqlite3_finalize(pStmt);
+    if ((rc = sqlite3_bind_int(pStmt_trans_start, 1, unit_db_id)) != SQLITE_OK){
+        fprintf(stderr, "Could not bind int\n");
+        fprintf(stderr, "%s\n", sqlite3_errstr(rc));
         return rc;
     }
-    rc = sqlite3_step(pStmt);
+    
+    if ((rc = sqlite3_bind_int(pStmt_trans_start, 2, trans_id)) != SQLITE_OK){
+        fprintf(stderr, "Could not bind int\n");
+        fprintf(stderr, "%s\n", sqlite3_errstr(rc));
+        return rc;
+    }
+    
+    if ((rc = sqlite3_bind_int64(pStmt_trans_start, 3, trans_init_time)) != SQLITE_OK){
+        fprintf(stderr, "Could not bind int64\n");
+        fprintf(stderr, "%s\n", sqlite3_errstr(rc));
+        return rc;
+    }
+    rc = sqlite3_step(pStmt_trans_start);
     if (rc != SQLITE_DONE){
         fprintf(stderr, "Could not perform INSERT\n");
-        fprintf(stderr, "Error: %s\n", sqlite3_errmsg(pDb));
+        fprintf(stderr, "Error: %s\n", sqlite3_errstr(rc));
         fprintf(stderr, "rc = %d\n", rc);
     }
-    *poll_id = sqlite3_last_insert_rowid(pDb);
-    sqlite3_finalize(pStmt);
-    return rc;
+    return sqlite3_reset(pStmt_trans_start);
 }
 
-/*
- * To be called when sending out a poll request.
- * Will issue an UPDATE statement.
- */
-int sa_write_poll_trans_send(sqlite3            * pDb,
-                             const sqlite_int64   poll_id,
-                             const uint16_t       trans_id,
-                             const uint64_t       start_time){
-    const char      sql_statement_templ[] = 
-    "UPDATE %s SET trans_init_time = %llu WHERE id = %lld;";
+int sa_update_poll_trans_receive_stmt(sqlite3 * pDb, sqlite3_stmt  ** ppStmt){
+    int             rc;
+    const char      update_values_list[]         = 
+    "trans_end_time = ?, state_data = ?, mb_excp_data = ?"; 
+    const char      condition_values_list[]      = 
+    "unit_id = ? AND trans_id = ? AND trans_init_time = ?";
+    const char      sql_statement_templ[] = "UPDATE %s SET %s WHERE %s;";
     char            sql_statement[BUF_SIZE];
-
-    snprintf(sql_statement, BUF_SIZE, sql_statement_templ, DB_POLLS_TABLE_NAME,
-             start_time, poll_id);
-    return sa_write_poll_trans_common(pDb, sql_statement, BUF_SIZE);
+    
+    snprintf(sql_statement, BUF_SIZE, sql_statement_templ, DB_POLLS_TABLE_NAME, 
+            update_values_list, condition_values_list);
+    printf("UPDATE statement:\n");
+    printf("%s\n", sql_statement);
+    rc = sqlite3_prepare_v2(pDb, sql_statement, sizeof(sql_statement), ppStmt, NULL);
+    if (rc != SQLITE_OK){
+        fprintf(stderr, "Could not create prepared statement for receive UPDATE\n");
+        fprintf(stderr, "%s\n", sqlite3_errstr(rc));        
+    }
+    return rc;
 }
 
 /*
  * To be called when sending receiving a response to a poll request
  * Will issue an UPDATE statement
  */
-int sa_write_poll_trans_receive(sqlite3            * pDb,
-                                const uint32_t       poll_id,
+int sa_update_poll_trans_receive(sqlite3_stmt      * pStmt_trans_receive,
+                                const uint16_t       unit_id,
                                 const uint16_t       trans_id,
-                                const uint64_t       end_time,
+                                const uint64_t       trans_init_time,
+                                const uint64_t       trans_end_time,
                                 const uint16_t       state,
                                 const uint16_t       excp_data){
-    const char      sql_statement_templ[] = 
-    "UPDATE %s SET trans_end_time = %llu, state_data = %s, mb_excp_data = %u WHERE id = %lld;";
-    char            sql_statement[BUF_SIZE];
-    char            state_str[BUF_SIZE] = "NULL";
-    
-    if (excp_data == 0){
-        snprintf(state_str, BUF_SIZE, "%u", state);
-    }
-    
-    snprintf(sql_statement, BUF_SIZE, sql_statement_templ, DB_POLLS_TABLE_NAME,
-             end_time, state_str, excp_data, poll_id);
-    return sa_write_poll_trans_common(pDb, sql_statement, BUF_SIZE);
-}
+    int rc;
 
-static int sa_write_poll_trans_common(sqlite3 * pDb, 
-                               const char sql_statement[], 
-                               size_t stmt_len){
-    int             rc;
-    sqlite3_stmt  * pStmt;
-    
-    printf("sa_write_poll_trans_common: sql_statement: %s\n", sql_statement);
-    rc = sqlite3_prepare_v2(pDb, sql_statement, stmt_len, &pStmt, NULL);
-    if (rc != SQLITE_OK){
-        fprintf(stderr, "Could not prepare SQL statement\n");
-        fprintf(stderr, "Error: %s\n", sqlite3_errmsg(pDb));
-        sqlite3_finalize(pStmt);
+    if ((rc = sqlite3_bind_int64(pStmt_trans_receive, 1, (sqlite_int64) trans_end_time)) != SQLITE_OK){
+        fprintf(stderr, "Could not bind int\n");
+        fprintf(stderr, "%s\n", sqlite3_errstr(rc));
         return rc;
     }
-    rc = sqlite3_step(pStmt);
+    if ((rc = sqlite3_bind_int(pStmt_trans_receive, 2, state)) != SQLITE_OK){
+        fprintf(stderr, "Could not bind int\n");
+        fprintf(stderr, "%s\n", sqlite3_errstr(rc));
+        return rc;
+    }
+    if ((rc = sqlite3_bind_int(pStmt_trans_receive, 3, excp_data)) != SQLITE_OK){
+        fprintf(stderr, "Could not bind int64\n");
+        fprintf(stderr, "%s\n", sqlite3_errstr(rc));
+        return rc;
+    }
+    if ((rc = sqlite3_bind_int(pStmt_trans_receive, 4, unit_id)) != SQLITE_OK){
+        fprintf(stderr, "Could not bind int\n");
+        fprintf(stderr, "%s\n", sqlite3_errstr(rc));
+        return rc;
+    }
+    if ((rc = sqlite3_bind_int(pStmt_trans_receive, 5, trans_id)) != SQLITE_OK){
+        fprintf(stderr, "Could not bind int\n");
+        fprintf(stderr, "%s\n", sqlite3_errstr(rc));
+        return rc;
+    }
+    if ((rc = sqlite3_bind_int64(pStmt_trans_receive, 6, (sqlite_int64) trans_init_time)) != SQLITE_OK){
+        fprintf(stderr, "Could not bind int64\n");
+        fprintf(stderr, "%s\n", sqlite3_errstr(rc));
+        return rc;
+    } 
+    rc = sqlite3_step(pStmt_trans_receive);
     if (rc != SQLITE_DONE){
-        fprintf(stderr, "Could not perform INSERT\n");
-        fprintf(stderr, "Error: %s\n", sqlite3_errmsg(pDb));
+        fprintf(stderr, "Could not perform UPDATE\n");
+        fprintf(stderr, "Error: %s\n", sqlite3_errstr(rc));
         fprintf(stderr, "rc = %d\n", rc);
-    }    
-    sqlite3_finalize(pStmt);
-    return rc;
+    }
+
+    return sqlite3_reset(pStmt_trans_receive);
 }
 
 #ifdef __cplusplus

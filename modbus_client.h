@@ -26,7 +26,8 @@ int mbcli_get_unit_state(const int        sockfd,
                          const uint8_t    unit_id,
                          const uint16_t   di_count,
                          uint16_t       * state,
-                         uint16_t       * exception);
+                         uint16_t       * exception,
+                         uint16_t       * recv_trid);
 
 static int mbcli_poll_gateway(int sockfd,
                  uint8_t *req, 

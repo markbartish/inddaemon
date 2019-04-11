@@ -19,7 +19,8 @@ int mbcli_get_unit_state(const int        sockfd,
                          const uint8_t    unit_id,
                          const uint16_t   di_count,
                          uint16_t       * state,
-                         uint16_t       * exception
+                         uint16_t       * exception,
+                         uint16_t       * recv_trid
                    ){
     uint8_t request[MODBUS_RESPONSE_BUF_SIZE];
     uint8_t response[MODBUS_RESPONSE_BUF_SIZE];
@@ -47,7 +48,7 @@ int mbcli_get_unit_state(const int        sockfd,
     // FC 02 specific message
     *state = (response[MB_DATA_OFFSET + 2] << 8) | (response[MB_DATA_OFFSET + 1]);
     *exception = 0;
-
+    *recv_trid = mbap_header.trans_id;
     if (response[MB_FCODE_OFFSET] & MB_FCODE_EXCEPTION_BITMASK){
         printf("WARNING: Exception set!\n");
         *exception = response[MB_FCODE_OFFSET + 1];
